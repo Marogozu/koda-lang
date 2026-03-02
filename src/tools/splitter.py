@@ -1,70 +1,35 @@
-class Splitter():
-    """
-    Splitter personalizado que nos permite mover posiciones y hacer peek al siguiente valor
-    caracter por caracter
-
-    """
-
-    src: list[str]
-    src_length: int
-    current_position: int
-    current_column: int
-    current_row: int
-    current_char: str
-
-    def __init__(self, src:str) -> None:
-        """
-        Inicializa las variables para el splitter
-        """
-        self.src = [char for char in src] #split every character
+class Splitter:
+    def __init__(self, src: str) -> None:
+        self.src = list(src)
         self.src_length = len(self.src)
         self.current_position = 0
         self.current_column = 1
         self.current_row = 1
-        self.current_char = src[0]
-
     
-    def next_char(self):
-        """
-        Mueve el puntero al siguiente caracter de src
-        """
-        if( self.isOutOfBounds( self.current_position + 1 ) ):
-            print("Imposible avanzar, out of bounds")
-            return
+    @property
+    def current_char(self): # Func que se ejecuta el leer splitter.current_char
+        if self.current_position >= self.src_length:
+            return "" # Return empty string at EOF
+        return self.src[self.current_position]
+
+    def has_more(self) -> bool:
+        return self.current_position < self.src_length
+
+    def next_char(self) -> bool:
+        """Mueve el puntero. Retorna False si llego al final"""
+        if not self.has_more():
+            return False
         
-        if(self.current_char == "\n"): #new line
-            self.increaseRow()
-            self.current_column = 0 # reset column
-
-        self.increaseColumn()
-
-        self.current_position = self.current_position + 1
-        self.current_char = self.src[self.current_position]
+        if self.current_char == "\n":
+            self.current_row += 1
+            self.current_column = 0
+        
+        self.current_position += 1
+        self.current_column += 1
+        return True
 
     def peek_next(self):
-        """
-        Revisa el valor del siguiente caracter en src sin mover el puntero
-        """
-        if( self.isOutOfBounds(self.current_position+1) ):
-            print("Imposible avanzar, out of bounds")
+        next_idx = self.current_position + 1
+        if next_idx >= self.src_length:
             return ""
-        
-        return self.src[self.current_position + 1]
-    
-    def return_current_char(self):
-        return self.current_char
-    
-    def isOutOfBounds(self, idx:int):
-        if idx < 0:
-            return True
-
-        if idx >= self.src_length:
-            return True
-
-        return False
-
-    def increaseColumn(self):
-        self.current_column = self.current_column + 1
-    
-    def increaseRow(self):
-        self.current_row = self.current_row + 1
+        return self.src[next_idx]
