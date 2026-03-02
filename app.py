@@ -3,9 +3,9 @@ from src import Lexer, Parser
 
 def compile(src: str):
     tokensFromSrc = Lexer(src=src)
-    #astFromTokens = Parser(tokensFromSrc)
-    
-    return tokensFromSrc
+    parser = Parser(tokens=tokensFromSrc)
+    ast = parser.parse()
+    return ast
 
 
 
