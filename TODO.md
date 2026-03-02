@@ -28,9 +28,9 @@ Estandares:
 
 - [] En la clase TokenType, quizas añadir una optimizacion seria lo justo? un map en vez del bucle para keyword_exists
 
-- [] Dado caso que no encuentre el token doublequot de cierre que hariamos?
-
 - [] Asegurarse que el parsing se detenga en casos especificos, quiza usando raise?
+
+- [x] Dado caso que no encuentre el token doublequot de cierre que hariamos?
 
 - [x] Verificar si el if deberia ser una cadena de if-elif para manejar tokens no reconocidos, o incluso usar un match.
 
