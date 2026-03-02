@@ -1,1 +1,11 @@
-string x = "cadena literal";
+int sum = 2 * 3 + 1;
+
+if(true){
+    print("valor");
+}else{
+    print("valor else");
+}
+
+while(true){
+    print(123);
+}

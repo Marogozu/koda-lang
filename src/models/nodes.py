@@ -1,30 +1,63 @@
-#Importacion de future y typing 
-    #Future para evitar errores de referencia hacia adelante al usar tipos en anotaciones, posponiendo su evaluación.
+# Importacion de future y typing 
+# Future para evitar errores de referencia hacia adelante al usar tipos en anotaciones, posponiendo su evaluación.
 from __future__ import annotations
-    #typing para usar tipos opcionales y listas en las anotaciones de tipo, mejorando la claridad del código y facilitando el análisis estático.
+# typing para usar tipos opcionales y listas en las anotaciones de tipo, mejorando la claridad del código y facilitando el análisis estático.
 from typing import Optional, List
 
-#Clases base para el AST (Abstract Syntax Tree)
+
+
+# --- NODO BASE ---
 class Node:
     def __init__(self, line: int = 0, column: int = 0):
         self.line = line
         self.column = column
 
+    def __repr__(self, indent: int = 0) -> str:
+        """Genera une representacion del nodo con identaciones y nuevas lineas para mejor lectura."""
+        name = self.__class__.__name__
+        ignored = {'line', 'column'}
+        
+        # Obtenemos los atributos y generamos su representación
+        items = []
+        for k, v in self.__dict__.items():
+            if k in ignored:
+                continue
+            
+            # Si el valor es otro Nodo, llamamos su repr con más indentación
+            if isinstance(v, Node):
+                val_str = v.__repr__(indent + 2)
+            # Si es una lista (como en BlockStmt), procesamos cada elemento
+            elif isinstance(v, list):
+                list_items = []
+                for item in v:
+                    list_items.append(item.__repr__(indent + 4) if isinstance(item, Node) else repr(item))
+                val_str = "[\n" + ",\n".join(list_items) + "\n" + " " * (indent + 2) + "]"
+            else:
+                val_str = repr(v)
+                
+            items.append(f"{' ' * (indent + 2)}{k}={val_str}")
+
+        if not items:
+            return f"{name}()"
+            
+        res = f"{name}(\n" + ",\n".join(items) + "\n" + " " * indent + ")"
+        return res
+
+
 
 class Expression(Node):
     """Fragmentos de codigo que 'valen algo'"""
-    def __init__(self, line: int = 0, column: int = 0):
-        super().__init__(line, column)
+    pass
 
 
 class Statement(Node):
     """Instrucciones que 'hacen algo'"""
-    def __init__(self, line: int = 0, column: int = 0):
-        super().__init__(line, column)
+    pass
 
 
-#Programa completo, raiz del AST (donde se guardan todas las sentencias)
 
+
+# --- RAÍZ ---
 class ProgramNode(Node):
     def __init__(self, line: int = 0, column: int = 0):
         super().__init__(line, column)
@@ -34,34 +67,33 @@ class ProgramNode(Node):
         self.sentences.append(node)
 
 
-# Tipos de nodos para expresiones y sentencias
-    #Nodos literales para valores constantes (números, cadenas, etc.) 
+
+
+# --- LITERALES ---
 class LiteralNode(Expression):
     def __init__(self, value, line: int = 0, column: int = 0):
         super().__init__(line, column)
         self.value = value
 
-    #nodos numericos y de cadenas
 class NumberLiteral(LiteralNode):
-    def __init__(self, value, line: int = 0, column: int = 0):
-        super().__init__(value, line, column)
+    pass
 
-    #nodos de cadenas tipo string, con comillas dobles o simples
 class StringLiteral(LiteralNode):
-    def __init__(self, value: str, line: int = 0, column: int = 0):
-        super().__init__(value, line, column)
+    pass
 
 
-#clase para identificadores (variables, funciones, etc.) que se usan en expresiones y sentencias# 
 
+
+# --- IDENTIFICADORES ---
 class Identifier(Expression):
     def __init__(self, name: str, line: int = 0, column: int = 0):
         super().__init__(line, column)
         self.name = name
 
 
-#Nodos para operadores unarios y binarios para expresiones aritméticas, lógicas, etc.
 
+
+# --- OPERACIONES ---
 class UnaryOp(Expression):
     def __init__(self, op, expr: Expression, line: int = 0, column: int = 0):
         super().__init__(line, column)
@@ -77,8 +109,9 @@ class BinaryOp(Expression):
         self.right = right
 
 
-# Nodos para sentencias de declaración de variables, asignación, impresión, bloques, condicionales y bucles
 
+
+# --- SENTENCIAS ---
 class VarDecl(Statement):
     def __init__(self, var_type, name: str, init: Optional[Expression] = None,
                  line: int = 0, column: int = 0):

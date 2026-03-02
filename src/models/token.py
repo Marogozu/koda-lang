@@ -63,4 +63,4 @@ class Token:
 
     def __repr__(self):
         """Esto hace que al hacer print(token) se vea mas profesional en la consola"""
-        return f"Tkn({self.type}, '{self.value}', l:{self.line}, c:{self.column})"
+        return f"t:{self.type}, v:{self.value}, row:{self.line}, col:{self.column}"

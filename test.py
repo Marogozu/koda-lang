@@ -25,4 +25,6 @@ tokens = Lexer(src=src)
 """ for token in tokens:
     print(f"tipo: {token.type}, valor: {token.value} ")  """
 
-Parser(tokens)
+parser = Parser(tokens)
+
+print(parser.parse())
