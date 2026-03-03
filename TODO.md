@@ -64,6 +64,10 @@ Estandares:
 
 ### Interfaz web
 
+- [] La interfaz debe ser similar a un editor de archivos (VS_CODE) almenos que tenga las funciones de abrir archivo y guardar archivo
+
+- [] Uitlizar javascript para almacenar el contenido que puede haber dentro del textarea
+
 - [] Agregar estilos basicos a la pagina (NADA COMPLEJO, y con fondo color #262626 por favor.)
 
 - [] Averiguar que mas podriamos hacer con los templates de Jinja, quiza hacer una interfaz bonita?

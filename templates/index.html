@@ -36,14 +36,11 @@
     
     {% if result %}
         <h1>Result:</h1>
-        <p>
+        <pre class="white-space: pre;">
             <code>
-                {% for token in result %}
-                    {{ token }}
-                    <br>
-                {% endfor %}
+{{ result }}
             </code>
-        </p>
+        </pre>
     {% endif %}
     
 
