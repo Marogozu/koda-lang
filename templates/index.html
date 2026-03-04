@@ -1,48 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koda compiler</title>
-    <style>
-        body{background-color: #262626; color: white;}
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Koda compiler</title>
+  <style>
+    body{background:#262626;color:#fff;font-family:system-ui;margin:0}
+    header{padding:16px;border-bottom:1px solid #3a3a3a;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    main{display:grid;grid-template-columns: 1fr 360px;gap:12px;padding:12px}
+    textarea{width:100%;height:72vh;background:#1e1e1e;color:#fff;border:1px solid #3a3a3a;border-radius:10px;padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:14px;resize:vertical}
+    .panel{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:10px;padding:12px;height:72vh;overflow:auto}
+    input, select, button{background:#333;color:#fff;border:1px solid #555;border-radius:8px;padding:8px}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .muted{color:#aaa;font-size:12px}
+    .error{color:#ffb4b4}
+    .ok{color:#b6ffb4}
+    code{white-space:pre-wrap}
+    a{color:#8bbcff}
+  </style>
 </head>
 <body>
 
-    <h1>Este es el index del compilador Koda</h1>
+<header>
+  <strong>Koda Compiler</strong>
 
-    <form action="/handle_data" method="POST" enctype="multipart/form-data">
-        <input type="file" name="codeFile" id="codeFile" accept=".kd">
-        <button type="submit">
-            Enviar
-        </button>
-    </form>
+  <form class="row" action="/new" method="POST">
+    <button type="submit">Nuevo</button>
+  </form>
 
+  <form class="row" action="/open" method="GET">
+    <select name="filename">
+      <option value="">-- abrir archivo --</option>
+      {% for f in files %}
+        <option value="{{ f }}" {% if current_file == f %}selected{% endif %}>{{ f }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Abrir</button>
+  </form>
 
-    <!--
-        TODO:
-        Que mas podriamos hacer con los Jinja templates? 
-    -->
+  <form class="row" action="/save" method="POST">
+    <input type="text" name="filename" placeholder="nombre.kd" value="{{ current_file or '' }}" required>
+    <button type="submit">Guardar</button>
+    <span class="muted">Se guarda en el servidor (workspace/)</span>
+    <input type="hidden" name="content" id="hiddenContent">
+  </form>
 
-    <!-- Jinja template syntax -->
+  <form class="row" action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="codeFile" accept=".kd" required>
+    <button type="submit">Subir .kd</button>
+  </form>
 
+  <form class="row" action="/compile" method="POST">
+    <button type="submit">Compilar</button>
+    <input type="hidden" name="filename" value="{{ current_file or '' }}">
+    <input type="hidden" name="content" id="hiddenContentCompile">
+  </form>
+</header>
+
+<main>
+  <section>
+    {% if message %}
+      <p class="ok">{{ message }}</p>
+    {% endif %}
     {% if error %}
-        <h2>Error</h2>
-        <p>
-            {{ error }}
-        </p>
+      <p class="error">{{ error }}</p>
     {% endif %}
-    
+
+    <textarea id="editor" placeholder="Escribe tu código Koda aquí...">{{ content or '' }}</textarea>
+    <p class="muted">Tip: guarda con un nombre como <code>main.kd</code>. Si compilas, se usa el contenido del editor.</p>
+  </section>
+
+  <aside class="panel">
+    <h3>Salida</h3>
     {% if result %}
-        <h1>Result:</h1>
-        <pre class="white-space: pre;">
-            <code>
-{{ result }}
-            </code>
-        </pre>
+      <code>
+{% for line in result %}
+{{ line }}
+{% endfor %}
+      </code>
+    {% else %}
+      <p class="muted">Aquí se mostrará el resultado (tokens/AST/errores) cuando compiles.</p>
     {% endif %}
-    
+  </aside>
+</main>
+
+<script>
+  // Copiamos el contenido del editor a los forms que lo necesitan
+  const editor = document.getElementById("editor");
+
+  function syncContent() {
+    document.getElementById("hiddenContent").value = editor.value;
+    document.getElementById("hiddenContentCompile").value = editor.value;
+  }
+  editor.addEventListener("input", syncContent);
+  syncContent();
+
+  // Antes de enviar el form de guardar, sincroniza
+  document.querySelector('form[action="/save"]').addEventListener("submit", syncContent);
+  document.querySelector('form[action="/compile"]').addEventListener("submit", syncContent);
+</script>
 
 </body>
 </html>

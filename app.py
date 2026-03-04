@@ -1,51 +1,100 @@
-from flask import Flask, request, render_template
-from src import Lexer, Parser
+import os
+from pathlib import Path
+from flask import Flask, render_template, request, redirect, url_for
 
-def compile(src: str):
-    tokensFromSrc = Lexer(src=src)
-    parser = Parser(tokens=tokensFromSrc)
-    ast = parser.parse()
-    return ast
-
-
-
+# Importa tu Lexer/Parser reales
+from src.lexer import Lexer
+from src.parser import Parser
 
 app = Flask(__name__)
 
-@app.route("/")
+WORKSPACE = Path("workspace")
+WORKSPACE.mkdir(exist_ok=True)
+
+def safe_kd_name(name: str) -> str:
+    # evita ../ y fuerza extensión .kd
+    name = (name or "").strip()
+    name = os.path.basename(name)
+    if not name.endswith(".kd"):
+        name += ".kd"
+    return name
+
+def list_kd_files():
+    return sorted([p.name for p in WORKSPACE.glob("*.kd")])
+
+def read_file(filename: str) -> str:
+    path = WORKSPACE / filename
+    return path.read_text(encoding="utf-8")
+
+def write_file(filename: str, content: str):
+    path = WORKSPACE / filename
+    path.write_text(content, encoding="utf-8")
+
+@app.get("/")
 def index():
-    return render_template("index.html")
+    files = list_kd_files()
+    return render_template("index.html", files=files, current_file="", content="", result=None)
 
-@app.route('/handle_data', methods=['POST'])
-def handle_data():
-    if request.method != "POST":
-        return render_template("index.html", error="Expected POST request.")
+@app.post("/new")
+def new_file():
+    # solo limpia el editor
+    return redirect(url_for("index"))
 
-    if "codeFile" not in request.files: #el name del input debe ser codeFile
-        return render_template("index.html", error="No file part found in request. (Did you uploaded a file?)")
+@app.get("/open")
+def open_file():
+    filename = request.args.get("filename", "")
+    files = list_kd_files()
+    if not filename:
+        return render_template("index.html", files=files, error="Selecciona un archivo para abrir.", current_file="", content="", result=None)
+    filename = safe_kd_name(filename)
+    path = WORKSPACE / filename
+    if not path.exists():
+        return render_template("index.html", files=files, error="Ese archivo no existe.", current_file="", content="", result=None)
+    content = read_file(filename)
+    return render_template("index.html", files=files, current_file=filename, content=content, result=None, message=f"Abierto: {filename}")
 
-    file = request.files["codeFile"]
+@app.post("/save")
+def save_file():
+    files = list_kd_files()
+    filename = safe_kd_name(request.form.get("filename", "main.kd"))
+    content = request.form.get("content", "")
 
-    if file.filename == "": #Al no tener nombre sospechamos que es un envio vacio
-        return render_template("index.html", error="No file selected. (Or no name found)")
+    write_file(filename, content)
+    files = list_kd_files()
+    return render_template("index.html", files=files, current_file=filename, content=content, result=None, message=f"Guardado: {filename}")
 
-    #(operaciones no seguras)
+@app.post("/upload")
+def upload_file():
+    files = list_kd_files()
+    f = request.files.get("codeFile")
+    if not f or f.filename == "":
+        return render_template("index.html", files=files, error="No se subió ningún archivo.", current_file="", content="", result=None)
+    filename = safe_kd_name(f.filename)
+    content = f.read().decode("utf-8", errors="replace")
+    write_file(filename, content)
+    files = list_kd_files()
+    return render_template("index.html", files=files, current_file=filename, content=content, result=None, message=f"Subido: {filename}")
+
+@app.post("/compile")
+def compile_code():
+    files = list_kd_files()
+    filename = request.form.get("filename", "")
+    content = request.form.get("content", "")
+
+    # Compila desde el editor siempre
     try:
-        # Leer archivo a memoria 
-        file_content = file.read()
-        
-        # decodificar como texto
-        text_data = file_content.decode('utf-8', errors='replace')
-        codeGen = compile(src=text_data)
+        tokens = Lexer(content)
+        parser = Parser(tokens)
+        ast = parser.parse()
 
-        return render_template("index.html", result=codeGen)
-    
+        # salida simple: tokens + repr(ast)
+        out = ["TOKENS:"]
+        out.extend([repr(t) for t in tokens])
+        out.append("\nAST:")
+        out.append(repr(ast))
+        return render_template("index.html", files=files, current_file=filename, content=content, result=out)
     except Exception as e:
-    
-        return render_template("index.html", error=f"Error processing file: {e}")
-    
+        return render_template("index.html", files=files, current_file=filename, content=content, error=str(e), result=None)
 
-
-# Permite hacer hot-reload y tener el servidor en modo debugging
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
