@@ -64,13 +64,13 @@ Estandares:
 
 ### Interfaz web
 
-- [] La interfaz debe ser similar a un editor de archivos (VS_CODE) almenos que tenga las funciones de abrir archivo y guardar archivo
+- [x] La interfaz debe ser similar a un editor de archivos (VS_CODE) almenos que tenga las funciones de abrir archivo y guardar archivo
 
-- [] Uitlizar javascript para almacenar el contenido que puede haber dentro del textarea
+- [x] Uitlizar javascript para almacenar el contenido que puede haber dentro del textarea
 
-- [] Agregar estilos basicos a la pagina (NADA COMPLEJO, y con fondo color #262626 por favor.)
+- [x] Agregar estilos basicos a la pagina (NADA COMPLEJO, y con fondo color #262626 por favor.)
 
-- [] Averiguar que mas podriamos hacer con los templates de Jinja, quiza hacer una interfaz bonita?
+- [x] Averiguar que mas podriamos hacer con los templates de Jinja, quiza hacer una interfaz bonita?
 
 - [x] Averiguar una forma de que podamos responder nuevamente la salida de el lexer hacia la pagina
 
