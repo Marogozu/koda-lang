@@ -8,7 +8,7 @@
     body{background:#262626;color:#fff;font-family:system-ui;margin:0}
     header{padding:16px;border-bottom:1px solid #3a3a3a;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
     main{display:grid;grid-template-columns: 1fr 360px;gap:12px;padding:12px}
-    textarea{width:100%;height:72vh;background:#1e1e1e;color:#fff;border:1px solid #3a3a3a;border-radius:10px;padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:14px;resize:vertical}
+    textarea{width:100%;height:72vh;background:#1e1e1e;color:#fff;border:1px solid #3a3a3a;border-radius:10px;padding:12px;font-family:ui-monospace, monospace;font-size:14px;resize:vertical}
     .panel{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:10px;padding:12px;height:72vh;overflow:auto}
     input, select, button{background:#333;color:#fff;border:1px solid #555;border-radius:8px;padding:8px}
     button{cursor:pointer}
@@ -17,58 +17,42 @@
     .error{color:#ffb4b4}
     .ok{color:#b6ffb4}
     code{white-space:pre-wrap}
-    a{color:#8bbcff}
+    .spacer{width:12px}
+    .tag{font-size:12px;color:#aaa;border:1px solid #444;padding:4px 8px;border-radius:999px}
   </style>
 </head>
 <body>
 
 <header>
   <strong>Koda Compiler</strong>
+  <span class="tag" id="currentFileTag">Sin archivo</span>
 
-  <form class="row" action="/new" method="POST">
-    <button type="submit">Nuevo</button>
-  </form>
+  <div class="spacer"></div>
 
-  <form class="row" action="/open" method="GET">
-    <select name="filename">
-      <option value="">-- abrir archivo --</option>
-      {% for f in files %}
-        <option value="{{ f }}" {% if current_file == f %}selected{% endif %}>{{ f }}</option>
-      {% endfor %}
-    </select>
-    <button type="submit">Abrir</button>
-  </form>
+  <button type="button" id="btnNew">Nuevo</button>
 
-  <form class="row" action="/save" method="POST">
-    <input type="text" name="filename" placeholder="nombre.kd" value="{{ current_file or '' }}" required>
-    <button type="submit">Guardar</button>
-    <span class="muted">Se guarda en el servidor (workspace/)</span>
-    <input type="hidden" name="content" id="hiddenContent">
-  </form>
+  <input type="file" id="filePicker" accept=".kd" style="display:none">
+  <button type="button" id="btnOpen">Abrir (.kd)</button>
 
-  <form class="row" action="/upload" method="POST" enctype="multipart/form-data">
-    <input type="file" name="codeFile" accept=".kd" required>
-    <button type="submit">Subir .kd</button>
-  </form>
+  <button type="button" id="btnSave">Guardar</button>
+  <button type="button" id="btnSaveAs">Guardar como</button>
 
-  <form class="row" action="/compile" method="POST">
+  <div class="spacer"></div>
+
+  <form class="row" action="/compile" method="POST" id="compileForm">
+    <input type="hidden" name="filename" id="compileFilename" value="">
+    <input type="hidden" name="content" id="compileContent" value="">
     <button type="submit">Compilar</button>
-    <input type="hidden" name="filename" value="{{ current_file or '' }}">
-    <input type="hidden" name="content" id="hiddenContentCompile">
   </form>
 </header>
 
 <main>
   <section>
-    {% if message %}
-      <p class="ok">{{ message }}</p>
-    {% endif %}
-    {% if error %}
-      <p class="error">{{ error }}</p>
-    {% endif %}
+    {% if message %}<p class="ok">{{ message }}</p>{% endif %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
     <textarea id="editor" placeholder="Escribe tu código Koda aquí...">{{ content or '' }}</textarea>
-    <p class="muted">Tip: guarda con un nombre como <code>main.kd</code>. Si compilas, se usa el contenido del editor.</p>
+    
   </section>
 
   <aside class="panel">
@@ -80,25 +64,132 @@
 {% endfor %}
       </code>
     {% else %}
-      <p class="muted">Aquí se mostrará el resultado (tokens/AST/errores) cuando compiles.</p>
+      <p class="muted"></p>
     {% endif %}
   </aside>
 </main>
 
 <script>
-  // Copiamos el contenido del editor a los forms que lo necesitan
   const editor = document.getElementById("editor");
+  const filePicker = document.getElementById("filePicker");
+  const currentFileTag = document.getElementById("currentFileTag");
 
-  function syncContent() {
-    document.getElementById("hiddenContent").value = editor.value;
-    document.getElementById("hiddenContentCompile").value = editor.value;
+  const btnNew = document.getElementById("btnNew");
+  const btnOpen = document.getElementById("btnOpen");
+  const btnSave = document.getElementById("btnSave");
+  const btnSaveAs = document.getElementById("btnSaveAs");
+
+  const compileForm = document.getElementById("compileForm");
+  const compileFilename = document.getElementById("compileFilename");
+  const compileContent = document.getElementById("compileContent");
+
+  // Estado local del "archivo actual"
+  let currentFilename = "";     // ej: main.kd
+  let isDirty = false;
+
+  function setCurrentFile(name) {
+    currentFilename = name || "";
+    currentFileTag.textContent = currentFilename ? `Archivo: ${currentFilename}` : "Sin archivo";
   }
-  editor.addEventListener("input", syncContent);
-  syncContent();
 
-  // Antes de enviar el form de guardar, sincroniza
-  document.querySelector('form[action="/save"]').addEventListener("submit", syncContent);
-  document.querySelector('form[action="/compile"]').addEventListener("submit", syncContent);
+  function markDirty(dirty) {
+    isDirty = dirty;
+    if (!currentFilename) return;
+    currentFileTag.textContent = dirty ? `Archivo: ${currentFilename} *` : `Archivo: ${currentFilename}`;
+  }
+
+  editor.addEventListener("input", () => markDirty(true));
+
+  // ✅ Descarga un archivo usando Blob + <a download>
+  function downloadTextFile(filename, text) {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      a.remove();
+    }, 0);
+  }
+
+  // ✅ Nuevo
+  btnNew.addEventListener("click", () => {
+    if (isDirty) {
+      const ok = confirm("Tienes cambios sin guardar. ¿Crear nuevo de todos modos?");
+      if (!ok) return;
+    }
+    editor.value = "";
+    setCurrentFile("");
+    markDirty(false);
+  });
+
+  // ✅ Abrir (local)
+  btnOpen.addEventListener("click", () => filePicker.click());
+
+  filePicker.addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (isDirty) {
+      const ok = confirm("Tienes cambios sin guardar. ¿Abrir de todos modos?");
+      if (!ok) {
+        filePicker.value = "";
+        return;
+      }
+    }
+
+    const text = await file.text();
+    editor.value = text;
+
+    // nombre del archivo abierto
+    setCurrentFile(file.name.endsWith(".kd") ? file.name : (file.name + ".kd"));
+    markDirty(false);
+
+    // reset input para poder abrir el mismo archivo otra vez si quieres
+    filePicker.value = "";
+  });
+
+  // Guardar
+  btnSave.addEventListener("click", () => {
+    let name = currentFilename;
+    if (!name) {
+      name = prompt("Nombre del archivo (.kd):", "main.kd") || "";
+      name = name.trim();
+      if (!name) return;
+    }
+    if (!name.endsWith(".kd")) name += ".kd";
+
+    downloadTextFile(name, editor.value);
+    setCurrentFile(name);
+    markDirty(false);
+  });
+
+  // ✅ Guardar como
+  btnSaveAs.addEventListener("click", () => {
+    let name = prompt("Guardar como (.kd):", currentFilename || "main.kd") || "";
+    name = name.trim();
+    if (!name) return;
+    if (!name.endsWith(".kd")) name += ".kd";
+
+    downloadTextFile(name, editor.value);
+    setCurrentFile(name);
+    markDirty(false);
+  });
+
+  // ✅ Compilar: mandar contenido al server SOLO aquí
+  compileForm.addEventListener("submit", () => {
+    compileFilename.value = currentFilename;
+    compileContent.value = editor.value;
+  });
+
+  // Inicial
+  setCurrentFile("");
+  markDirty(false);
 </script>
 
 </body>
