@@ -6,10 +6,50 @@
   <title>Koda compiler</title>
   <style>
     body{background:#262626;color:#fff;font-family:system-ui;margin:0}
-    header{padding:16px;border-bottom:1px solid #3a3a3a;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    main{display:grid;grid-template-columns: 1fr 360px;gap:12px;padding:12px}
-    textarea{width:100%;height:72vh;background:#1e1e1e;color:#fff;border:1px solid #3a3a3a;border-radius:10px;padding:12px;font-family:ui-monospace, monospace;font-size:14px;resize:vertical}
-    .panel{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:10px;padding:12px;height:72vh;overflow:auto}
+
+    header{
+      padding:16px;
+      border-bottom:1px solid #3a3a3a;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap
+    }
+
+    /* ✅ Layout tipo IDE: editor arriba, salida abajo */
+    main{
+      display:grid;
+      grid-template-rows: 1fr 260px; /* editor / salida */
+      gap:12px;
+      padding:12px;
+      height:calc(100vh - 70px); /* ajusta si tu header cambia de alto */
+      box-sizing:border-box;
+    }
+
+    textarea{
+      width:100%;
+      height:100%;
+      background:#1e1e1e;
+      color:#fff;
+      border:1px solid #3a3a3a;
+      border-radius:10px;
+      padding:12px;
+      font-family:ui-monospace, monospace;
+      font-size:14px;
+      resize:none; /* para que no rompa el layout del grid */
+      box-sizing:border-box;
+    }
+
+    .panel{
+      background:#1e1e1e;
+      border:1px solid #3a3a3a;
+      border-radius:10px;
+      padding:12px;
+      height:100%;
+      overflow:auto;
+      box-sizing:border-box;
+    }
+
     input, select, button{background:#333;color:#fff;border:1px solid #555;border-radius:8px;padding:8px}
     button{cursor:pointer}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -47,14 +87,15 @@
 </header>
 
 <main>
+  <!-- Editor arriba -->
   <section>
     {% if message %}<p class="ok">{{ message }}</p>{% endif %}
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
     <textarea id="editor" placeholder="Escribe tu código Koda aquí...">{{ content or '' }}</textarea>
-    
   </section>
 
+  <!-- Salida abajo -->
   <aside class="panel">
     <h3>Salida</h3>
     {% if result %}
@@ -83,8 +124,7 @@
   const compileFilename = document.getElementById("compileFilename");
   const compileContent = document.getElementById("compileContent");
 
-  // Estado local del "archivo actual"
-  let currentFilename = "";     // ej: main.kd
+  let currentFilename = "";
   let isDirty = false;
 
   function setCurrentFile(name) {
@@ -100,7 +140,6 @@
 
   editor.addEventListener("input", () => markDirty(true));
 
-  // ✅ Descarga un archivo usando Blob + <a download>
   function downloadTextFile(filename, text) {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -117,7 +156,6 @@
     }, 0);
   }
 
-  // ✅ Nuevo
   btnNew.addEventListener("click", () => {
     if (isDirty) {
       const ok = confirm("Tienes cambios sin guardar. ¿Crear nuevo de todos modos?");
@@ -128,7 +166,6 @@
     markDirty(false);
   });
 
-  // ✅ Abrir (local)
   btnOpen.addEventListener("click", () => filePicker.click());
 
   filePicker.addEventListener("change", async (e) => {
@@ -146,15 +183,11 @@
     const text = await file.text();
     editor.value = text;
 
-    // nombre del archivo abierto
     setCurrentFile(file.name.endsWith(".kd") ? file.name : (file.name + ".kd"));
     markDirty(false);
-
-    // reset input para poder abrir el mismo archivo otra vez si quieres
     filePicker.value = "";
   });
 
-  // Guardar
   btnSave.addEventListener("click", () => {
     let name = currentFilename;
     if (!name) {
@@ -169,7 +202,6 @@
     markDirty(false);
   });
 
-  // ✅ Guardar como
   btnSaveAs.addEventListener("click", () => {
     let name = prompt("Guardar como (.kd):", currentFilename || "main.kd") || "";
     name = name.trim();
@@ -181,13 +213,11 @@
     markDirty(false);
   });
 
-  // ✅ Compilar: mandar contenido al server SOLO aquí
   compileForm.addEventListener("submit", () => {
     compileFilename.value = currentFilename;
     compileContent.value = editor.value;
   });
 
-  // Inicial
   setCurrentFile("");
   markDirty(false);
 </script>
