@@ -60,6 +60,12 @@ Estandares:
 
 - [] Agregar un la linea al metodo de eat siguiendo el tipo del token
 
+#### Analizador Semantico
+
+- [] Refactorizar quiza? Para que el diseño sea menos acoplado pero mas entendible el como funciona (sin tantos saltos)
+- [] Como adaptar los demas tipos de dato (bool, void y similares) con los bloques de IfStmt o WhileStmt
+- [] Comprender el pattern design de Visitor  que se implemento para el analisis semantico y los nodos.
+
 ---
 
 ### Interfaz web
