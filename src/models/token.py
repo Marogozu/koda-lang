@@ -18,6 +18,7 @@ class TokenType(Enum):
     FLOAT = "float"
     DOUBLE = "double"
     STRING = "string"
+    BOOL = "bool"
 
     # Aritmetica
     PLUS = "+"
@@ -38,6 +39,8 @@ class TokenType(Enum):
     ID = "ID"         # nombres de variables
     NUMBER = "NUMBER" # numero
     STRING_LITERAL = "STRING_LITERAL" # cadena de texto (pero no en una variable)
+    TRUE = "true"
+    FALSE = "false"
     EOF = "EOF"       # Fin de archivo (usado en el Parser)
 
 
