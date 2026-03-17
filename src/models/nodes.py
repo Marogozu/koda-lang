@@ -11,7 +11,17 @@ class Node:
     def __init__(self, line: int = 0, column: int = 0):
         self.line = line
         self.column = column
-
+    
+    # Utilidad creada para el analisis semantico, permite interactuar recursivamente
+    # con los metodos dedicados a verificacion de la clase Visitor
+    def accept(self, visitor):
+        # Genera el nombre del metodo dinamicamente
+        method_name = f"visit_{self.__class__.__name__}"
+        # Se toma el metodo que genera la posibilidad de visita, sino se espera
+        # que este definido un metodo .generic_visit como default call
+        visitor_method = getattr(visitor, method_name, visitor.generic_visit)
+        return visitor_method(self)
+    
     def __repr__(self, indent: int = 0) -> str:
         """Genera une representacion del nodo con identaciones y nuevas lineas para mejor lectura."""
         name = self.__class__.__name__
