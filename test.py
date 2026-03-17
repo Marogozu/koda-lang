@@ -1,4 +1,5 @@
 from src import Lexer, Parser
+from src.semanticAnalyzer import SemanticAnalyzer
 
 # este archivo es un orquestrador mas simple que toda la interfaz de flask
 # sirve para probar parte por parte todos las fases de compilacion
@@ -21,10 +22,6 @@ except:
 #a partir de aqui en teoria ya deberiamos tener el archivo en la variable src
 
 tokens = Lexer(src=src)
-
-""" for token in tokens:
-    print(f"tipo: {token.type}, valor: {token.value} ")  """
-
-parser = Parser(tokens)
-
-print(parser.parse())
+ast = Parser(tokens).parse()
+analyzer = SemanticAnalyzer()
+ast.accept(analyzer)
