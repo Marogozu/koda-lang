@@ -3,6 +3,7 @@
 from __future__ import annotations
 # typing para usar tipos opcionales y listas en las anotaciones de tipo, mejorando la claridad del código y facilitando el análisis estático.
 from typing import Optional, List
+#from src.models.token import TokenType
 
 
 
@@ -11,17 +12,11 @@ class Node:
     def __init__(self, line: int = 0, column: int = 0):
         self.line = line
         self.column = column
-    
-    # Utilidad creada para el analisis semantico, permite interactuar recursivamente
-    # con los metodos dedicados a verificacion de la clase Visitor
-    def accept(self, visitor):
-        # Genera el nombre del metodo dinamicamente
-        method_name = f"visit_{self.__class__.__name__}"
-        # Se toma el metodo que genera la posibilidad de visita, sino se espera
-        # que este definido un metodo .generic_visit como default call
-        visitor_method = getattr(visitor, method_name, visitor.generic_visit)
-        return visitor_method(self)
-    
+
+    def analyze(self, analyzer, scope_stack):
+        """Metodo base que deben implementar las subclases."""
+        raise NotImplementedError
+        
     def __repr__(self, indent: int = 0) -> str:
         """Genera une representacion del nodo con identaciones y nuevas lineas para mejor lectura."""
         name = self.__class__.__name__
@@ -54,14 +49,13 @@ class Node:
         return res
 
 
-
 class Expression(Node):
-    """Fragmentos de codigo que 'valen algo'"""
+    """Las expresiones son fragmentos que valen algo literalmente. Devuelven su tipo al analizar"""
     pass
 
 
 class Statement(Node):
-    """Instrucciones que 'hacen algo'"""
+    """Las sentencias son instrucciones que hacen algo. No devuelven tipo"""
     pass
 
 
@@ -76,6 +70,8 @@ class ProgramNode(Node):
     def add_node(self, node: Statement):
         self.sentences.append(node)
 
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_program(self, scope_stack)
 
 
 
@@ -85,12 +81,20 @@ class LiteralNode(Expression):
         super().__init__(line, column)
         self.value = value
 
+
 class NumberLiteral(LiteralNode):
-    pass
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_number_literal(self, scope_stack)
+
 
 class StringLiteral(LiteralNode):
-    pass
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_string_literal(self, scope_stack)
 
+
+class BoolLiteral(LiteralNode):
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_bool_literal(self, scope_stack)
 
 
 
@@ -100,6 +104,8 @@ class Identifier(Expression):
         super().__init__(line, column)
         self.name = name
 
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_identifier(self, scope_stack)
 
 
 
@@ -110,6 +116,9 @@ class UnaryOp(Expression):
         self.op = op
         self.expr = expr
 
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_unary_op(self, scope_stack)
+
 
 class BinaryOp(Expression):
     def __init__(self, op, left: Expression, right: Expression, line: int = 0, column: int = 0):
@@ -118,6 +127,8 @@ class BinaryOp(Expression):
         self.left = left
         self.right = right
 
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_binary_op(self, scope_stack)
 
 
 
@@ -130,6 +141,9 @@ class VarDecl(Statement):
         self.name = name
         self.init = init
 
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_var_decl(self, scope_stack)
+
 
 class Assign(Statement):
     def __init__(self, name: str, expr: Expression,
@@ -138,6 +152,9 @@ class Assign(Statement):
         self.name = name
         self.expr = expr
 
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_assign(self, scope_stack)
+
 
 class PrintStmt(Statement):
     def __init__(self, expr: Expression,
@@ -145,12 +162,18 @@ class PrintStmt(Statement):
         super().__init__(line, column)
         self.expr = expr
 
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_print_stmt(self, scope_stack)
+
 
 class BlockStmt(Statement):
     def __init__(self, statements: Optional[List[Statement]] = None,
                  line: int = 0, column: int = 0):
         super().__init__(line, column)
         self.statements = statements if statements is not None else []
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_block_stmt(self, scope_stack)
 
 
 class IfStmt(Statement):
@@ -163,6 +186,9 @@ class IfStmt(Statement):
         self.then_branch = then_branch
         self.else_branch = else_branch
 
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_if_stmt(self, scope_stack)
+
 
 class WhileStmt(Statement):
     def __init__(self, condition: Expression,
@@ -171,3 +197,6 @@ class WhileStmt(Statement):
         super().__init__(line, column)
         self.condition = condition
         self.body = body
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_while_stmt(self, scope_stack)

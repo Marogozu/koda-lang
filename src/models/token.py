@@ -33,7 +33,11 @@ class TokenType(Enum):
     RPAREN = ")"
     LBRACE = "{"
     RBRACE = "}"
-    SEMICOLON = ";" 
+    SEMICOLON = ";"
+    LT = "<"   # less than
+    GT = ">"   # greater than
+    LTE = "<=" # less than equals
+    GTE = ">=" # greater than equals
     
     # Literales e identificadores
     ID = "ID"         # nombres de variables

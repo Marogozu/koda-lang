@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template
-from src import Lexer, Parser
+from src import Lexer, Parser, SemanticAnalyzer
 
 app = Flask(__name__)
 
@@ -26,20 +26,20 @@ def compile_code():
         # ----- Fase 2: Parser -----
         parser = Parser(tokens)
         ast = parser.parse()
+        analyzer = SemanticAnalyzer()
+        semantic = analyzer.analyze(ast)
 
-        # salida que se mostrará en el panel derecho
-        result = []
-
-        result.append("TOKENS:")
-        for t in tokens:
-            result.append(str(t))
-
-        result.append("\nAST:")
-        result.append(str(ast))
+        # salida que se mostrará en los paneles
+        # tokens = str(tokens)
+        # tokens = "\n".join(tokens)
+        ast = str(ast)
 
         return render_template(
             "index.html",
-            result=result,
+            output="some code outputting here",
+            tokens=tokens,
+            ast=ast,
+            semantic=semantic,
             content=src
         )
 
@@ -47,7 +47,8 @@ def compile_code():
 
         return render_template(
             "index.html",
-            error=str(e),
+            output=str(e),
+            # error=str(e),
             content=src
         )
 

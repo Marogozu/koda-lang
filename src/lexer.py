@@ -118,6 +118,20 @@ def Lexer(src: str):
 
             # Simbolos/Operadores o caracteres no reconocidos
             case _:
+                
+                # Posible simbolo, quiza es un simbolo de mas de un char
+                possible_symbol = current_char + splitter.peek_next()
+                symbol = TokenType.keyword_exists(possible_symbol)
+                if symbol:
+                    tokens.append(buildToken(
+                        start_row,
+                        start_col, 
+                        [possible_symbol], 
+                        symbol
+                    ))
+                    break   
+                
+                # Sino busca solo un simbolo simple
                 symbol = TokenType.keyword_exists(current_char)
                 if symbol:
                     tokens.append(buildToken(

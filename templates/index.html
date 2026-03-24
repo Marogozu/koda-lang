@@ -1,225 +1,604 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Koda compiler</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koda Studio</title>
   <style>
-    body{background:#262626;color:#fff;font-family:system-ui;margin:0}
-
-    header{
-      padding:16px;
-      border-bottom:1px solid #3a3a3a;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      flex-wrap:wrap
+    :root {
+      --bg-dark: #1e1e1e;
+      --bg-sidebar: #252526;
+      --border-color: #3a3a3a;
+      --accent-color: #0e639c;
+      --text-main: #cccccc;
+      --text-dim: #8c8c8c;
+      --line-num-bg: #252526;
+      --tab-active: #1e1e1e;
+      --tab-inactive: #2d2d2d;
     }
 
-    main{
-      display:grid;
-      grid-template-rows: 1fr 260px; /* editor / salida */
-      gap:12px;
-      padding:12px;
-      height:calc(100vh - 70px); /* ajusta si tu header cambia de alto */
-      box-sizing:border-box;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    textarea{
-      width:100%;
-      height:100%;
-      background:#1e1e1e;
-      color:#fff;
-      border:1px solid #3a3a3a;
-      border-radius:10px;
-      padding:12px;
-      font-family:ui-monospace, monospace;
-      font-size:14px;
-      resize:none; /* para que no rompa el layout del grid */
-      box-sizing:border-box;
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
     }
 
-    .panel{
-      background:#1e1e1e;
-      border:1px solid #3a3a3a;
-      border-radius:10px;
-      padding:12px;
-      height:100%;
-      overflow:auto;
-      box-sizing:border-box;
+    /* ---------- BARRA LATERAL ---------- */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      transition: width 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
     }
 
-    input, select, button{background:#333;color:#fff;border:1px solid #555;border-radius:8px;padding:8px}
-    button{cursor:pointer}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .muted{color:#aaa;font-size:12px}
-    .error{color:#ffb4b4}
-    .ok{color:#b6ffb4}
-    code{white-space:pre-wrap}
-    .spacer{width:12px}
-    .tag{font-size:12px;color:#aaa;border:1px solid #444;padding:4px 8px;border-radius:999px}
+    .sidebar.collapsed {
+      width: 50px;
+    }
+
+    .sidebar-header {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      height: 40px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .sidebar.collapsed .sidebar-title {
+      display: none;
+    }
+
+    .sidebar-content {
+      padding: 10px;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* BOTONES */
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 4px;
+      transition: background 0.2s, color 0.2s;
+      text-align: left;
+    }
+
+    .nav-btn:hover {
+      background: #37373d;
+      color: white;
+    }
+
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .nav-btn span {
+      white-space: nowrap;
+    }
+
+    .sidebar.collapsed .nav-btn span {
+      display: none;
+    }
+
+    .sidebar.collapsed .nav-btn {
+      justify-content: center;
+    }
+
+    .nav-btn.primary {
+      background: var(--accent-color);
+      color: white;
+      margin-top: 10px;
+    }
+
+    .nav-btn.primary:hover {
+      background: #1177bb;
+    }
+    
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      background-color: currentColor; /* Usa el color del texto del botón */
+      display: inline-block;
+      
+      /* Asegúrate de que estas rutas sean correctas */
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-position: center;
+      mask-position: center;
+    }
+    
+    /* Clases específicas para cada icono */
+    .icon-arrow { 
+        -webkit-mask-image: url('/static/icons/arrow.svg'); 
+        mask-image: url('/static/icons/arrow.svg'); 
+    }
+    
+    .icon-file { 
+        -webkit-mask-image: url('/static/icons/file.svg'); 
+        mask-image: url('/static/icons/file.svg'); 
+    }
+    
+    .icon-floppy { 
+        -webkit-mask-image: url('/static/icons/floppy.svg'); 
+        mask-image: url('/static/icons/floppy.svg'); 
+    }
+    
+    .icon-folder { 
+        -webkit-mask-image: url('/static/icons/folder.svg'); 
+        mask-image: url('/static/icons/folder.svg');
+    }
+    
+    .icon-hamburguer { 
+        -webkit-mask-image: url('/static/icons/hamburguer.svg'); 
+        mask-image: url('/static/icons/hamburguer.svg'); 
+    }
+
+
+    /* ---------- ÁREA PRINCIPAL ---------- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-dark);
+    }
+
+    /* EDITOR */
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-header {
+      background: var(--bg-sidebar);
+      padding: 8px 15px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-dim);
+    }
+
+    .code-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .line-numbers {
+      background: var(--line-num-bg);
+      color: #858585;
+      text-align: right;
+      padding: 10px 10px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      border-right: 1px solid var(--border-color);
+      min-width: 45px;
+      user-select: none;
+      overflow-y: hidden;
+      line-height: 1.5;
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      color: #d4d4d4;
+      border: none;
+      padding: 10px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      line-height: 1.5;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    /* ---------- PANELES INFERIORES ---------- */
+    .bottom-panels {
+      height: 220px;
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-tabs {
+      display: flex;
+      background: var(--bg-sidebar);
+      padding-left: 10px;
+      border-bottom: 1px solid var(--border-color);
+      gap: 2px;
+    }
+
+    .panel-tab {
+      padding: 6px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: color 0.2s;
+    }
+
+    .panel-tab:hover {
+      color: white;
+    }
+
+    .panel-tab.active {
+      color: white;
+      border-bottom: 1px solid white;
+    }
+
+    .panel-content {
+      flex: 1;
+      padding: 10px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      overflow-y: auto;
+      display: none;
+      /*white-space: pre-wrap;
+      word-wrap: break-word;*/
+    }
+
+    .panel-content.active {
+      display: block;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+    }
+
+    .log-success {
+      color: #6a9955;
+    }
+
+    .log-info {
+      color: #0e639c;
+    }
+
+    /* BARRA DE ESTADO */
+    .statusbar {
+      background: var(--accent-color);
+      color: white;
+      padding: 3px 12px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .dirty-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f48771;
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <strong>Koda Compiler</strong>
-  <span class="tag" id="currentFileTag">Sin archivo</span>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">EXPLORADOR</span>
+      <button id="toggleSidebar" style="background:none; border:none; color:inherit; cursor:pointer;">
+        <!--<svg viewBox="0 0 24 24" width="18" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>-->
+        <span class="nav-icon icon-hamburguer"></span>
+      </button>
+    </div>
 
-  <div class="spacer"></div>
+    <div class="sidebar-content">
+      <button class="nav-btn" id="btnNew">
+        <!--<svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M13,9V3.5L18.5,9H13Z" /></svg>-->
+        <span class="nav-icon icon-file"></span>
+        <span>Nuevo Archivo</span>
+      </button>
 
-  <button type="button" id="btnNew">Nuevo</button>
+      <button class="nav-btn" id="btnOpen">
+        <!--<svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" /></svg>-->
+        <span class="nav-icon icon-folder"></span>
+        <span>Abrir</span>
+      </button>
 
-  <input type="file" id="filePicker" accept=".kd" style="display:none">
-  <button type="button" id="btnOpen">Abrir (.kd)</button>
+      <button class="nav-btn" id="btnSave">
+        <!--<svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>-->
+        <span class="nav-icon icon-floppy"></span>
+        <span>Guardar</span>
+      </button>
 
-  <button type="button" id="btnSave">Guardar</button>
-  <button type="button" id="btnSaveAs">Guardar como</button>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
 
-  <div class="spacer"></div>
+      <form id="compileForm" action="/compile" method="POST">
+        <input type="hidden" name="filename" id="compileFilename">
+        <input type="hidden" name="content" id="compileContent">
+        <button type="submit" class="nav-btn primary">
+          <!--<svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z" /></svg>-->
+          <span class="nav-icon icon-arrow"></span>
+          <span>Compilar Koda</span>
+        </button>
+      </form>
+    </div>
+  </div>
 
-  <form class="row" action="/compile" method="POST" id="compileForm">
-    <input type="hidden" name="filename" id="compileFilename" value="">
-    <input type="hidden" name="content" id="compileContent" value="">
-    <button type="submit">Compilar</button>
-  </form>
-</header>
+  <div class="main">
+    <div class="editor-container">
+      <div class="editor-header">
+        <span><span id="fileNameDisplay">Sin título.kd</span></span>
+        <span id="editorStats">0 líneas</span>
+      </div>
+      <div class="code-area">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea id="editor" spellcheck="false" placeholder="// Escribe tu código aquí...">{{ content or '' }}</textarea>
+      </div>
+    </div>
 
-<main>
-  <!-- Editor arriba -->
-  <section>
-    {% if message %}<p class="ok">{{ message }}</p>{% endif %}
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <div class="bottom-panels">
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-target="panel-output">Output</button>
+        <button class="panel-tab" data-target="panel-tokens">Tokens</button>
+        <button class="panel-tab" data-target="panel-debug">AST</button>
+        <button class="panel-tab" data-target="panel-terminal">Semantic</button>
+      </div>
+      
+      <div id="panel-output" class="panel-content active">
+        {% if output %}
+          <pre>{{ output }}</pre>
+        {% else %}
+          <div class="log-entry" style="color:#fff">No output from server</div>
+        {% endif %}
+      </div>
+      
+      <div id="panel-tokens" class="panel-content">
+        {% if tokens %}
+          <pre>{{ tokens }}</pre>
+          {% else %}
+            <div class="log-entry" style="color:#fff">No output from server</div>
+        {% endif %}
+      </div>
 
-    <textarea id="editor" placeholder="Escribe tu código Koda aquí...">{{ content or '' }}</textarea>
-  </section>
+      <div id="panel-debug" class="panel-content">
+        {% if ast %}
+          <pre>{{ ast }}</pre>
+          {% else %}
+            <div class="log-entry" style="color:#fff">No output from server</div>
+        {% endif %}
+      </div>
 
-  <!-- Salida abajo -->
-  <aside class="panel">
-    <h3>Salida</h3>
-    {% if result %}
-      <code>
-{% for line in result %}
-{{ line }}
-{% endfor %}
-      </code>
-    {% else %}
-      <p class="muted"></p>
-    {% endif %}
-  </aside>
-</main>
+      <div id="panel-terminal" class="panel-content">
+        <!--<div class="log-entry" style="color:#fff">Koda Web Terminal [V1.0.0]</div>-->
+        {% if semantic %}
+          <pre>{{ semantic }}</pre>
+          {% else %}
+            <div class="log-entry" style="color:#fff">No output from server</div>
+        {% endif %}
+      </div>
 
-<script>
-  const editor = document.getElementById("editor");
-  const filePicker = document.getElementById("filePicker");
-  const currentFileTag = document.getElementById("currentFileTag");
+    </div>
 
-  const btnNew = document.getElementById("btnNew");
-  const btnOpen = document.getElementById("btnOpen");
-  const btnSave = document.getElementById("btnSave");
-  const btnSaveAs = document.getElementById("btnSaveAs");
+    <div class="statusbar">
+      <span>
+        <span id="dirtyDot"></span>
+        <span id="statusFile">Sin archivo</span>
+      </span>
+      <span>
+        <span id="cursorPos">Línea 1, Col 1</span> | UTF-8
+      </span>
+    </div>
+  </div>
 
-  const compileForm = document.getElementById("compileForm");
-  const compileFilename = document.getElementById("compileFilename");
-  const compileContent = document.getElementById("compileContent");
+  <script>
+    /** @type {HTMLTextAreaElement} */
+    const editor = document.getElementById('editor');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const cursorPos = document.getElementById('cursorPos');
 
-  let currentFilename = "";
-  let isDirty = false;
+    let currentHandle = null;
+    let currentFilename = '';
+    let isDirty = false;
 
-  function setCurrentFile(name) {
-    currentFilename = name || "";
-    currentFileTag.textContent = currentFilename ? `Archivo: ${currentFilename}` : "Sin archivo";
-  }
+    function updateUI() {
+      const name = currentFilename || 'Sin título.kd';
+      fileNameDisplay.textContent = (isDirty ? '● ' : '') + name;
+      document.getElementById('statusFile').textContent = name;
+      document.getElementById('dirtyDot').innerHTML = isDirty ? '<span class="dirty-dot"></span>' : '';
 
-  function markDirty(dirty) {
-    isDirty = dirty;
-    if (!currentFilename) return;
-    currentFileTag.textContent = dirty ? `Archivo: ${currentFilename} *` : `Archivo: ${currentFilename}`;
-  }
-
-  editor.addEventListener("input", () => markDirty(true));
-
-  function downloadTextFile(filename, text) {
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-      a.remove();
-    }, 0);
-  }
-
-  btnNew.addEventListener("click", () => {
-    if (isDirty) {
-      const ok = confirm("Tienes cambios sin guardar. ¿Crear nuevo de todos modos?");
-      if (!ok) return;
+      const lines = editor.value.split('\n').length;
+      document.getElementById('editorStats').textContent = `${lines} líneas`;
+      document.title = (isDirty ? '● ' : '') + name + ' - Koda Studio';
     }
-    editor.value = "";
-    setCurrentFile("");
-    markDirty(false);
-  });
 
-  btnOpen.addEventListener("click", () => filePicker.click());
+    function updateLineNumbers() {
+      const lines = editor.value.split('\n').length;
+      let numbers = '';
+      for (let i = 1; i <= lines; i++) {
+        numbers += i + '<br>';
+      }
+      lineNumbers.innerHTML = numbers;
+    }
 
-  filePicker.addEventListener("change", async (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
+    function updateCursor() {
+      const pos = editor.selectionStart;
+      const textBefore = editor.value.substring(0, pos);
+      const lines = textBefore.split('\n');
+      cursorPos.textContent = `Línea ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+    }
 
-    if (isDirty) {
-      const ok = confirm("Tienes cambios sin guardar. ¿Abrir de todos modos?");
-      if (!ok) {
-        filePicker.value = "";
-        return;
+    function switchTab(targetId, activeBtn) {
+      document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(targetId).classList.add('active');
+      activeBtn.classList.add('active');
+    }
+
+    async function saveToHandle(handle, content) {
+      try {
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        return true;
+      } catch (e) {
+        console.error("Error al escribir archivo:", e);
+        return false;
       }
     }
 
-    const text = await file.text();
-    editor.value = text;
-
-    setCurrentFile(file.name.endsWith(".kd") ? file.name : (file.name + ".kd"));
-    markDirty(false);
-    filePicker.value = "";
-  });
-
-  btnSave.addEventListener("click", () => {
-    let name = currentFilename;
-    if (!name) {
-      name = prompt("Nombre del archivo (.kd):", "main.kd") || "";
-      name = name.trim();
-      if (!name) return;
+    async function saveCurrent() {
+      if (currentHandle) {
+        if (await saveToHandle(currentHandle, editor.value)) {
+          isDirty = false;
+          updateUI();
+        }
+      } else {
+        await saveAs();
+      }
     }
-    if (!name.endsWith(".kd")) name += ".kd";
 
-    downloadTextFile(name, editor.value);
-    setCurrentFile(name);
-    markDirty(false);
-  });
+    async function saveAs() {
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: currentFilename || 'main.kd',
+            types: [{
+              description: 'Koda Files',
+              accept: { 'text/plain': ['.kd'] }
+            }]
+          });
+          if (await saveToHandle(handle, editor.value)) {
+            currentHandle = handle;
+            currentFilename = handle.name;
+            isDirty = false;
+            updateUI();
+          }
+        } catch (e) {
+          if (e.name !== 'AbortError') console.error(e);
+        }
+      } else {
+        alert("Tu navegador no soporta el acceso directo al sistema de archivos. Se descargará el archivo.");
+        const blob = new Blob([editor.value], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = currentFilename || 'archivo.kd';
+        a.click();
+      }
+    }
 
-  btnSaveAs.addEventListener("click", () => {
-    let name = prompt("Guardar como (.kd):", currentFilename || "main.kd") || "";
-    name = name.trim();
-    if (!name) return;
-    if (!name.endsWith(".kd")) name += ".kd";
+    // --- LISTENERS ---
+    editor.addEventListener('input', () => {
+      isDirty = true;
+      updateLineNumbers();
+      updateUI();
+    });
 
-    downloadTextFile(name, editor.value);
-    setCurrentFile(name);
-    markDirty(false);
-  });
+    editor.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = editor.scrollTop;
+    });
 
-  compileForm.addEventListener("submit", () => {
-    compileFilename.value = currentFilename;
-    compileContent.value = editor.value;
-  });
+    editor.addEventListener('click', updateCursor);
+    editor.addEventListener('keyup', updateCursor);
 
-  setCurrentFile("");
-  markDirty(false);
-</script>
+    document.getElementById('toggleSidebar').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    };
 
+    document.querySelectorAll('.panel-tab').forEach(btn => {
+      btn.onclick = () => switchTab(btn.dataset.target, btn);
+    });
+
+    document.getElementById('btnNew').onclick = () => {
+      if (isDirty && !confirm('¿Descartar cambios sin guardar?')) return;
+      editor.value = '';
+      currentHandle = null;
+      currentFilename = '';
+      isDirty = false;
+      updateUI();
+      updateLineNumbers();
+      updateCursor();
+    };
+
+    document.getElementById('btnOpen').onclick = async () => {
+      if (isDirty && !confirm('Hay cambios sin guardar. ¿Continuar?')) return;
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'Koda',
+            accept: { 'text/plain': ['.kd'] }
+          }]
+        });
+        const file = await handle.getFile();
+        editor.value = await file.text();
+        currentHandle = handle;
+        currentFilename = file.name;
+        isDirty = false;
+        updateUI();
+        updateLineNumbers();
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error(e);
+      }
+    };
+
+    document.getElementById('btnSave').onclick = saveCurrent;
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrent();
+      }
+    });
+
+    document.getElementById('compileForm').onsubmit = function() {
+      document.getElementById('compileFilename').value = currentFilename;
+      document.getElementById('compileContent').value = editor.value;
+    };
+
+    // Inicialización
+    updateLineNumbers();
+    updateUI();
+    updateCursor();
+  </script>
 </body>
 </html>
