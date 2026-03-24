@@ -1,7 +1,6 @@
 # Keyword documentation for Koda language
 
 ## PR_CONTROL (Flujo)
-
 `if` / `where`
 - **Token:** `IF`
 - **Descripción:** Inicia un bloque condicional.
