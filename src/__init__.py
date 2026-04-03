@@ -10,3 +10,4 @@ from .lexer import Lexer
 from .parser import Parser
 from .semanticAnalyzer import SemanticAnalyzer
 from .symbolTable import SymbolTable
+from src.tools.CodeGenerator import CodeGenerator

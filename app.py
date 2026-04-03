@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template
-from src import Lexer, Parser, SemanticAnalyzer
+from src import Lexer, Parser, SemanticAnalyzer, CodeGenerator
 
 app = Flask(__name__)
 
@@ -29,6 +29,10 @@ def compile_code():
         analyzer = SemanticAnalyzer()
         semantic = analyzer.analyze(ast)
 
+        # ----- Fase 4: Code Generation -----
+        generator = CodeGenerator()
+        output = generator.generate(ast)
+
         # salida que se mostrará en los paneles
         # tokens = str(tokens)
         # tokens = "\n".join(tokens)
@@ -36,7 +40,7 @@ def compile_code():
 
         return render_template(
             "index.html",
-            output="some code outputting here",
+            output=output,
             tokens=tokens,
             ast=ast,
             semantic=semantic,
