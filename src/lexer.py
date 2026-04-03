@@ -1,23 +1,29 @@
-from src.models.token import TokenType, Token
+from src.models.token import TokenType, Token, KEYWORD_ALIASES
 from src.tools.splitter import Splitter
 
 
 def buildToken(row:int, col:int, value:list[str], type:TokenType = TokenType.ID) -> Token :
     """
-    Builds a standarized token
+    Builds a standarized token.
+    Lookup order:
+      1. KEYWORD_ALIASES  — aliases como where, def, out, echo, array, void, extern
+      2. keyword_exists   — keywords canonicos como if, while, int, print ...
+      3. type param       — tipo pasado externamente (default ID)
     """
 
-    # une todos los caracteres splitteados en una sola cadena
-    joined_token_chars = "".join(value)    
+    joined_token_chars = "".join(value)
 
-    isKeyword = TokenType.keyword_exists(joined_token_chars)
+    # 1. Aliases tienen prioridad sobre keywords canonicos
+    alias_type = KEYWORD_ALIASES.get(joined_token_chars)
+    if alias_type:
+        return Token(alias_type, joined_token_chars, row, col)
 
-    if(isKeyword):
-        keyword = isKeyword
-        type = keyword
+    # 2. Keyword canonico
+    canonical = TokenType.keyword_exists(joined_token_chars)
+    if canonical:
+        type = canonical
 
-
-    return Token(type, joined_token_chars, row, col);
+    return Token(type, joined_token_chars, row, col)
 
 # EJEMPLOS USANDO NUESTRO ALFABETO
 
@@ -119,7 +125,7 @@ def Lexer(src: str):
             # Simbolos/Operadores o caracteres no reconocidos
             case _:
                 
-                # Posible simbolo, quiza es un simbolo de mas de un char
+                # Posible simbolo de mas de un char (<=, >=, ==)
                 possible_symbol = current_char + splitter.peek_next()
                 symbol = TokenType.keyword_exists(possible_symbol)
                 if symbol:
@@ -129,19 +135,22 @@ def Lexer(src: str):
                         [possible_symbol], 
                         symbol
                     ))
-                    break   
-                
+                    # Avanzar el segundo caracter del simbolo doble
+                    # para que el next_char() del final del loop no lo reprocese
+                    splitter.next_char()
+                    
                 # Sino busca solo un simbolo simple
-                symbol = TokenType.keyword_exists(current_char)
-                if symbol:
-                    tokens.append(buildToken(
-                        start_row,
-                        start_col, 
-                        [current_char], 
-                        symbol
-                    ))
                 else:
-                    print(f"Unknown character: {current_char} at {start_row}:{start_col}")
+                    symbol = TokenType.keyword_exists(current_char)
+                    if symbol:
+                        tokens.append(buildToken(
+                            start_row,
+                            start_col, 
+                            [current_char], 
+                            symbol
+                        ))
+                    else:
+                        print(f"Unknown character: {current_char} at {start_row}:{start_col}")
 
         # Esto mueve el puntero una vez por iteracion
         splitter.next_char()

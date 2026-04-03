@@ -134,9 +134,15 @@ class BinaryOp(Expression):
 
 # --- SENTENCIAS ---
 class VarDecl(Statement):
+    """Declaración de variable.
+
+    modifier: TokenType.MOD_GLOBAL | MOD_LOCAL | MOD_AUTO | None
+              Proviene de public/extern/static/auto que precede al tipo.
+    """
     def __init__(self, var_type, name: str, init: Optional[Expression] = None,
-                 line: int = 0, column: int = 0):
+                 line: int = 0, column: int = 0, modifier=None):
         super().__init__(line, column)
+        self.modifier = modifier   # None si no hay modificador
         self.var_type = var_type
         self.name = name
         self.init = init
@@ -200,3 +206,91 @@ class WhileStmt(Statement):
 
     def analyze(self, analyzer, scope_stack):
         analyzer.analyze_while_stmt(self, scope_stack)
+
+
+class DoWhileStmt(Statement):
+    """Representa: do { body } while (condition);"""
+    def __init__(self, body: Statement,
+                 condition: Expression,
+                 line: int = 0, column: int = 0):
+        super().__init__(line, column)
+        self.body = body
+        self.condition = condition
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_do_while_stmt(self, scope_stack)
+
+
+class ForStmt(Statement):
+    """Representa: for (init; condition; update) { body }
+    
+    - init:      VarDecl o Assign (puede ser None)
+    - condition: Expression (puede ser None => bucle infinito)
+    - update:    Assign (puede ser None)
+    - body:      Statement
+    """
+    def __init__(self, init, condition: Optional[Expression],
+                 update, body: Statement,
+                 line: int = 0, column: int = 0):
+        super().__init__(line, column)
+        self.init = init
+        self.condition = condition
+        self.update = update
+        self.body = body
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_for_stmt(self, scope_stack)
+
+
+class ReturnStmt(Statement):
+    """Representa: return expr; o return;"""
+    def __init__(self, expr: Optional[Expression] = None,
+                 line: int = 0, column: int = 0):
+        super().__init__(line, column)
+        self.expr = expr
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_return_stmt(self, scope_stack)
+
+
+class BreakStmt(Statement):
+    """Representa: break;"""
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_break_stmt(self, scope_stack)
+
+
+class PassStmt(Statement):
+    """Representa: pass;"""
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_pass_stmt(self, scope_stack)
+
+
+class EndStmt(Statement):
+    """Representa: end;  — salida/cierre de bloque sin valor de retorno."""
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_end_stmt(self, scope_stack)
+
+
+class InputExpr(Expression):
+    """Representa: input  (lectura de stdin, usada como expresion en asignaciones)"""
+    def analyze(self, analyzer, scope_stack):
+        return analyzer.analyze_input_expr(self, scope_stack)
+
+
+class FuncDecl(Statement):
+    """Representa: function/def nombre(params) { body }
+    
+    - name:   str
+    - params: lista de VarDecl (sin inicializador, solo tipo y nombre)
+    - body:   BlockStmt
+    """
+    def __init__(self, name: str, params: List['VarDecl'],
+                 body: 'BlockStmt',
+                 line: int = 0, column: int = 0):
+        super().__init__(line, column)
+        self.name = name
+        self.params = params
+        self.body = body
+
+    def analyze(self, analyzer, scope_stack):
+        analyzer.analyze_func_decl(self, scope_stack)

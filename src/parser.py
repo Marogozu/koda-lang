@@ -2,7 +2,9 @@ from src.models.token import TokenType, Token
 from src.models.nodes import (
     BlockStmt, IfStmt, ProgramNode, VarDecl, Assign, PrintStmt,
     Identifier, NumberLiteral, StringLiteral, BoolLiteral,
-    UnaryOp, BinaryOp, WhileStmt
+    UnaryOp, BinaryOp, WhileStmt,
+    DoWhileStmt, ForStmt, ReturnStmt, BreakStmt, PassStmt,
+    InputExpr, FuncDecl
 )
 
 PRECEDENCE = {
@@ -11,7 +13,8 @@ PRECEDENCE = {
     TokenType.MINUS: 10,
     TokenType.MULT: 20,
     TokenType.DIV: 20,
-    # Op booleanos
+    # Op relacionales
+    TokenType.EQUALS: 4,
     TokenType.LT: 5,
     TokenType.GT: 5,
     TokenType.LTE: 5,
@@ -28,10 +31,18 @@ class Parser:
         
         # Mapear TokenType a metodos de parsing
         self._stmt_handlers = {
-            TokenType.LBRACE: self._parse_block,
-            TokenType.IF: self._parse_if,
-            TokenType.WHILE: self._parse_while,
-            TokenType.PRINT: self._parse_print,
+            TokenType.LBRACE:    self._parse_block,
+            TokenType.IF:        self._parse_if,
+            TokenType.WHILE:     self._parse_while,
+            TokenType.DO:        self._parse_do_while,
+            TokenType.FOR:       self._parse_for,
+            TokenType.STDOUT:    self._parse_print,
+            TokenType.RETURN:    self._parse_return,
+            TokenType.BREAK:     self._parse_break,
+            TokenType.PASS:      self._parse_pass,
+            TokenType.FUNC_DECL: self._parse_func_decl,
+            TokenType.ENTRY_P1:  self._parse_func_decl,
+            TokenType.ENTRY_P2:  self._parse_func_decl,
         }
 
     # --- NAVEGACION ---
@@ -77,7 +88,9 @@ class Parser:
             return handler()
 
         # Declaraciones de variables (tipos)
-        if t in (TokenType.BOOL, TokenType.INT, TokenType.FLOAT, TokenType.DOUBLE, TokenType.STRING):
+        if t in (TokenType.BOOL, TokenType.INT, TokenType.FLOAT,
+                 TokenType.DOUBLE, TokenType.STRING, TokenType.CHAR,
+                 TokenType.COLLECTION, TokenType.EMPTY):
             return self._parse_var_decl()
 
         # Asignaciones (ID seguido de ASSIGN)
@@ -126,12 +139,120 @@ class Parser:
         return WhileStmt(cond, body, w.line, w.column)
 
     def _parse_print(self) -> PrintStmt:
-        p = self.eat(TokenType.PRINT)
+        p = self.advance()   # consume STDOUT (print / out / echo / system)
         self.eat(TokenType.LPAREN)
         expr = self._parse_expression()
         self.eat(TokenType.RPAREN)
         self.eat(TokenType.SEMICOLON)
         return PrintStmt(expr, p.line, p.column)
+
+    def _parse_do_while(self) -> DoWhileStmt:
+        do_tok = self.eat(TokenType.DO)
+        body = self._parse_statement()
+        self.eat(TokenType.WHILE)
+        self.eat(TokenType.LPAREN)
+        cond = self._parse_expression()
+        self.eat(TokenType.RPAREN)
+        self.eat(TokenType.SEMICOLON)
+        return DoWhileStmt(body, cond, do_tok.line, do_tok.column)
+
+    def _parse_for(self) -> ForStmt:
+        """for (init; condition; update) body
+        
+        - init:   VarDecl o Assign o nada  (hasta primer ';')
+        - cond:   Expression o nada        (hasta segundo ';')
+        - update: Assign o nada            (hasta ')')
+        """
+        f = self.eat(TokenType.FOR)
+        self.eat(TokenType.LPAREN)
+
+        # --- init ---
+        init = None
+        t = self.peek().type
+        if t in (TokenType.INT, TokenType.FLOAT, TokenType.DOUBLE,
+                 TokenType.STRING, TokenType.BOOL, TokenType.CHAR,
+                 TokenType.COLLECTION, TokenType.EMPTY):
+            init = self._parse_var_decl()          # ya consume el ';'
+        elif t == TokenType.ID and self.peek(1).type == TokenType.ASSIGN:
+            init = self._parse_assign()            # ya consume el ';'
+        else:
+            self.eat(TokenType.SEMICOLON)          # ';' vacío
+
+        # --- condition ---
+        cond = None
+        if not self.at(TokenType.SEMICOLON):
+            cond = self._parse_expression()
+        self.eat(TokenType.SEMICOLON)
+
+        # --- update ---
+        update = None
+        if not self.at(TokenType.RPAREN):
+            # Reutilizamos la lógica de assign pero sin consumir ';' (no hay ';' aquí)
+            idtok = self.eat(TokenType.ID)
+            self.eat(TokenType.ASSIGN)
+            expr = self._parse_expression()
+            # Creamos el nodo Assign manualmente (sin el ';' final)
+            update = Assign(idtok.value, expr, idtok.line, idtok.column)
+
+        self.eat(TokenType.RPAREN)
+        body = self._parse_statement()
+        return ForStmt(init, cond, update, body, f.line, f.column)
+
+    def _parse_return(self) -> ReturnStmt:
+        r = self.eat(TokenType.RETURN)
+        expr = None
+        if not self.at(TokenType.SEMICOLON):
+            expr = self._parse_expression()
+        self.eat(TokenType.SEMICOLON)
+        return ReturnStmt(expr, r.line, r.column)
+
+    def _parse_break(self) -> BreakStmt:
+        b = self.eat(TokenType.BREAK)
+        self.eat(TokenType.SEMICOLON)
+        return BreakStmt(b.line, b.column)
+
+    def _parse_pass(self) -> PassStmt:
+        p = self.eat(TokenType.PASS)
+        self.eat(TokenType.SEMICOLON)
+        return PassStmt(p.line, p.column)
+
+    def _parse_func_decl(self) -> FuncDecl:
+        """function/def/main/head nombre(params) { body }
+        
+        Para ENTRY_P1 (main) y ENTRY_P2 (head) el nombre es opcional:
+        se usa el propio keyword como nombre si no hay ID a continuación.
+        """
+        kw = self.advance()   # consume FUNC_DECL / ENTRY_P1 / ENTRY_P2
+
+        # Nombre de la funcion
+        if self.at(TokenType.ID):
+            name = self.eat(TokenType.ID).value
+        else:
+            # main / head sin nombre extra: el keyword es el nombre
+            name = kw.value
+
+        self.eat(TokenType.LPAREN)
+        params = self._parse_param_list()
+        self.eat(TokenType.RPAREN)
+        body = self._parse_block()
+        return FuncDecl(name, params, body, kw.line, kw.column)
+
+    def _parse_param_list(self) -> list:
+        """Lista de parámetros: (tipo nombre, tipo nombre, ...) sin inicializador."""
+        params = []
+        while not self.at(TokenType.RPAREN):
+            if self.at(TokenType.EOF):
+                tok = self.peek()
+                raise SyntaxError(
+                    f"[PARSER] Lista de parámetros sin ')' en l:{tok.line}, c:{tok.column}"
+                )
+            type_tok = self.advance()
+            name_tok = self.eat(TokenType.ID)
+            params.append(VarDecl(type_tok.type, name_tok.value, None,
+                                  type_tok.line, type_tok.column))
+            # Consumir coma separadora si la hay (COMMA aún no implementado, pero dejamos el hook)
+            # if self.at(TokenType.COMMA): self.advance()
+        return params
 
     def _parse_var_decl(self) -> VarDecl:
         type_tok = self.advance()
@@ -184,6 +305,10 @@ class Parser:
         if tok.type == TokenType.TRUE or tok.type == TokenType.FALSE:
             s = self.advance()
             return BoolLiteral(s.value, s.line, s.column)
+
+        if tok.type == TokenType.STDIN:
+            s = self.advance()
+            return InputExpr(s.line, s.column)
 
         if tok.type == TokenType.STRING_LITERAL:
             s = self.advance()
