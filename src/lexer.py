@@ -76,11 +76,11 @@ def Lexer(src: str):
                 # dejar al splitter.next_char() actuar al final
                 pass
 
-            # palabras/keywords
+            # palabras/keywords — primer char es letra, resto puede ser letra, digito o _
             case char if char.isalpha():
                 generatedToken.append(current_char)
                 
-                while splitter.has_more() and splitter.peek_next().isalpha():
+                while splitter.has_more() and (splitter.peek_next().isalpha() or splitter.peek_next().isdigit() or splitter.peek_next() == '_'):
                     splitter.next_char()
                     generatedToken.append(splitter.current_char)
                 
@@ -124,7 +124,14 @@ def Lexer(src: str):
 
             # Simbolos/Operadores o caracteres no reconocidos
             case _:
-                
+
+                # Comentario de linea: // → ignorar hasta el fin de la linea
+                if current_char == '/' and splitter.peek_next() == '/':
+                    while splitter.has_more() and splitter.current_char != '\n':
+                        splitter.next_char()
+                    # el next_char() del final del loop consumira el '\n'
+                    continue
+
                 # Posible simbolo de mas de un char (<=, >=, ==)
                 possible_symbol = current_char + splitter.peek_next()
                 symbol = TokenType.keyword_exists(possible_symbol)
