@@ -1,5 +1,8 @@
 from flask import Flask, request, render_template
 from src import Lexer, Parser, SemanticAnalyzer, CodeGenerator
+import io
+import sys
+import contextlib
 
 app = Flask(__name__)
 
@@ -31,18 +34,32 @@ def compile_code():
 
         # ----- Fase 4: Code Generation -----
         generator = CodeGenerator()
-        output = generator.generate(ast)
+        generated_code = generator.generate(ast)
+
+        # ----- Fase 5: Execution -----
+        # Capturar el stdout del codigo generado
+        stdout_capture = io.StringIO()
+        try:
+            # El namespace compartido permite que funciones y variables
+            # declaradas antes sean visibles en todo el programa.
+            # __builtins__ es necesario para que print, input, int, etc. funcionen.
+            namespace = {"__builtins__": __builtins__}
+            with contextlib.redirect_stdout(stdout_capture):
+                exec(generated_code, namespace)
+            output = stdout_capture.getvalue()
+            if not output:
+                output = "(El programa no produjo salida)"
+        except Exception as exec_error:
+            output = f"[ERROR DE EJECUCION] {exec_error}"
 
         # salida que se mostrará en los paneles
-        # tokens = str(tokens)
-        # tokens = "\n".join(tokens)
-        ast = str(ast)
+        ast_str = str(ast)
 
         return render_template(
             "index.html",
             output=output,
             tokens=tokens,
-            ast=ast,
+            ast=ast_str,
             semantic=semantic,
             content=src
         )

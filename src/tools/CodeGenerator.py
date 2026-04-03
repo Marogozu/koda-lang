@@ -30,6 +30,38 @@ _TYPE_CAST = {
     TokenType.BOOL:   "bool",
     # STRING y CHAR no necesitan cast, input() ya devuelve str
 }
+from src.models.nodes import (
+    ProgramNode, VarDecl, Assign, PrintStmt, BlockStmt,
+    IfStmt, WhileStmt, DoWhileStmt, ForStmt,
+    ReturnStmt, BreakStmt, PassStmt, EndStmt,
+    InputExpr, FuncDecl,
+    NumberLiteral, StringLiteral, BoolLiteral,
+    Identifier, UnaryOp, BinaryOp
+)
+from src.models.token import TokenType
+
+
+# Mapeo de TokenType de operador a su simbolo Python
+_OP_SYMBOLS = {
+    TokenType.PLUS:   "+",
+    TokenType.MINUS:  "-",
+    TokenType.MULT:   "*",
+    TokenType.DIV:    "/",
+    TokenType.EQUALS: "==",
+    TokenType.LT:     "<",
+    TokenType.GT:     ">",
+    TokenType.LTE:    "<=",
+    TokenType.GTE:    ">=",
+}
+
+# Tipos de Koda que en Python se leen con input() y necesitan cast
+_TYPE_CAST = {
+    TokenType.INT:    "int",
+    TokenType.FLOAT:  "float",
+    TokenType.DOUBLE: "float",
+    TokenType.BOOL:   "bool",
+    # STRING y CHAR no necesitan cast, input() ya devuelve str
+}
 
 
 class CodeGenerator:
@@ -257,6 +289,8 @@ class CodeGenerator:
         Koda:   function suma(int a, int b) { return a + b; }
         Python: def suma(a, b):
                     return a + b
+
+        Para main/head se emite ademas la llamada automatica al final.
         """
         params_str = ", ".join(p.name for p in node.params)
         self._emit(f"def {node.name}({params_str}):")
@@ -269,6 +303,11 @@ class CodeGenerator:
 
         self._indent -= 1
         self._emit_raw("")  # linea en blanco tras la funcion
+
+        # main y head son puntos de entrada — se invocan automaticamente
+        if node.name in ("main", "head"):
+            self._emit(f"{node.name}()")
+            self._emit_raw("")
 
     # ------------------------------------------------------------------ #
     #  Generadores de expresiones                                          #

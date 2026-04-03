@@ -1,0 +1,196 @@
+// ============================================================
+// TEST SUITE - Koda Language
+// Cubre todas las keywords nuevas implementadas
+// ============================================================
+
+
+// ------------------------------------------------------------
+// TEST 1: Igualdad  (==  / EQUALS)
+// Antes del fix esto no parseaba — el operador no estaba
+// registrado en PRECEDENCE y el parser lo ignoraba.
+// ------------------------------------------------------------
+int a = 5;
+int b = 5;
+bool sonIguales = a == b;
+print(sonIguales);
+
+
+// ------------------------------------------------------------
+// TEST 2: Modificadores de variable
+// public  → MOD_GLOBAL
+// static  → MOD_LOCAL
+// auto    → MOD_AUTO
+// ------------------------------------------------------------
+public int contadorGlobal = 100;
+static int contadorLocal = 0;
+print(contadorGlobal);
+print(contadorLocal);
+
+
+// ------------------------------------------------------------
+// TEST 3: Alias de keywords
+// where  → IF
+// out    → STDOUT  (equivalente a print)
+// echo   → STDOUT
+// ------------------------------------------------------------
+int temperatura = 30;
+
+where (temperatura > 25) {
+    out("hace calor");
+} else {
+    echo("hace frio");
+}
+
+
+// ------------------------------------------------------------
+// TEST 4: do-while
+// Siempre ejecuta el cuerpo al menos una vez,
+// luego evalua la condicion.
+// ------------------------------------------------------------
+int intentos = 0;
+
+do {
+    intentos = intentos + 1;
+    print(intentos);
+} while (intentos < 3);
+
+
+// ------------------------------------------------------------
+// TEST 5: for con init + condicion + update
+// Koda soporta for C-style:  for (tipo var = val; cond; var = expr)
+// ------------------------------------------------------------
+for (int i = 0; i < 5; i = i + 1) {
+    print(i);
+}
+
+
+// ------------------------------------------------------------
+// TEST 6: break dentro de while
+// Valido solo dentro de un bucle — el analizador semantico
+// lanza error si break aparece fuera de un loop.
+// ------------------------------------------------------------
+int x = 0;
+
+while (x < 10) {
+    x = x + 1;
+    if (x == 5) {
+        break;
+    }
+    print(x);
+}
+
+
+// ------------------------------------------------------------
+// TEST 7: pass  (no-op, valido en cualquier contexto)
+// ------------------------------------------------------------
+int debug = 1;
+
+if (debug == 1) {
+    pass;
+} else {
+    print(debug);
+}
+
+
+// ------------------------------------------------------------
+// TEST 8: function / def  (alias)
+// Un parametro por ahora (COMMA no implementado aun).
+// ------------------------------------------------------------
+function cuadrado(int n) {
+    return n * n;
+}
+
+int resultado = 4;
+print(resultado);
+
+
+// alias def → FUNC_DECL
+def saludar(string nombre) {
+    print(nombre);
+}
+
+
+// ------------------------------------------------------------
+// TEST 9: return con y sin valor
+// ------------------------------------------------------------
+function esMayor(int num) {
+    if (num > 0) {
+        return num;
+    }
+    return 0;
+}
+
+
+// ------------------------------------------------------------
+// TEST 10: end  (cierre de bloque sin valor de retorno)
+// Semanticamente equivalente a return sin expresion.
+// ------------------------------------------------------------
+function verificar(int val) {
+    if (val == 0) {
+        print(val);
+        end;
+    }
+    print(val);
+}
+
+
+// ------------------------------------------------------------
+// TEST 11: input  / STDIN
+// int x = input;  →  Python:  x = int(input())
+// string s = input;  →  Python: s = input()
+// ------------------------------------------------------------
+string nombre = input;
+print(nombre);
+
+int edad = input;
+print(edad);
+
+
+// ------------------------------------------------------------
+// TEST 12: main  (ENTRY_P1 — punto de entrada nivel 1)
+// head  (ENTRY_P2 — punto de entrada nivel 2)
+// El nombre es opcional, si no hay ID usa el keyword como nombre.
+// ------------------------------------------------------------
+main() {
+    print(resultado);
+}
+
+head() {
+    print(contadorGlobal);
+}
+
+
+// ------------------------------------------------------------
+// TEST 13: while con condicion == (EQUALS)
+// Combina el fix del operador == con un bucle while.
+// ------------------------------------------------------------
+int cuenta = 0;
+
+while (cuenta == 0) {
+    cuenta = cuenta + 1;
+}
+
+print(cuenta);
+
+
+// ------------------------------------------------------------
+// TEST 14: for sin init ni update  (bucle por condicion pura)
+// Los tres campos del for son opcionales.
+// ------------------------------------------------------------
+int j = 0;
+
+for (; j < 3; j = j + 1) {
+    print(j);
+}
+
+
+// ------------------------------------------------------------
+// TEST 15: do-while con condicion ==
+// Combina do-while con el operador de igualdad.
+// ------------------------------------------------------------
+int k = 5;
+
+do {
+    print(k);
+    k = k - 1;
+} while (k == 3);
