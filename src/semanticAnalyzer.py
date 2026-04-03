@@ -141,8 +141,10 @@ class SemanticAnalyzer:
                 f"Error semantico: La condicion del 'while' debe ser BOOL, "
                 f"pero se encontro {cond_type.name} (linea {node.line})"
             )
-            
+
+        scope_stack.enter_loop()
         node.body.analyze(self, scope_stack)
+        scope_stack.exit_loop()
 
     # --- Tabla de reglas para operadores binarios ---
 

@@ -3,7 +3,7 @@ from src.models.nodes import (
     BlockStmt, IfStmt, ProgramNode, VarDecl, Assign, PrintStmt,
     Identifier, NumberLiteral, StringLiteral, BoolLiteral,
     UnaryOp, BinaryOp, WhileStmt,
-    DoWhileStmt, ForStmt, ReturnStmt, BreakStmt, PassStmt,
+    DoWhileStmt, ForStmt, ReturnStmt, BreakStmt, PassStmt, EndStmt,
     InputExpr, FuncDecl
 )
 
@@ -40,6 +40,7 @@ class Parser:
             TokenType.RETURN:    self._parse_return,
             TokenType.BREAK:     self._parse_break,
             TokenType.PASS:      self._parse_pass,
+            TokenType.END:       self._parse_end,
             TokenType.FUNC_DECL: self._parse_func_decl,
             TokenType.ENTRY_P1:  self._parse_func_decl,
             TokenType.ENTRY_P2:  self._parse_func_decl,
@@ -86,6 +87,10 @@ class Parser:
         handler = self._stmt_handlers.get(t)
         if handler:
             return handler()
+
+        # Declaraciones con modificador: public/extern/static/auto tipo nombre = valor;
+        if t in (TokenType.MOD_GLOBAL, TokenType.MOD_LOCAL, TokenType.MOD_AUTO):
+            return self._parse_var_decl()
 
         # Declaraciones de variables (tipos)
         if t in (TokenType.BOOL, TokenType.INT, TokenType.FLOAT,
@@ -216,6 +221,11 @@ class Parser:
         self.eat(TokenType.SEMICOLON)
         return PassStmt(p.line, p.column)
 
+    def _parse_end(self) -> EndStmt:
+        e = self.eat(TokenType.END)
+        self.eat(TokenType.SEMICOLON)
+        return EndStmt(e.line, e.column)
+
     def _parse_func_decl(self) -> FuncDecl:
         """function/def/main/head nombre(params) { body }
         
@@ -255,6 +265,11 @@ class Parser:
         return params
 
     def _parse_var_decl(self) -> VarDecl:
+        # Modificador opcional: public / extern / static / auto
+        modifier = None
+        if self.peek().type in (TokenType.MOD_GLOBAL, TokenType.MOD_LOCAL, TokenType.MOD_AUTO):
+            modifier = self.advance().type
+
         type_tok = self.advance()
         name_tok = self.eat(TokenType.ID)
         init = None
@@ -263,7 +278,8 @@ class Parser:
             init = self._parse_expression()
 
         self.eat(TokenType.SEMICOLON)
-        return VarDecl(type_tok.type, name_tok.value, init, type_tok.line, type_tok.column)
+        return VarDecl(type_tok.type, name_tok.value, init,
+                       type_tok.line, type_tok.column, modifier=modifier)
 
     def _parse_assign(self) -> Assign:
         idtok = self.eat(TokenType.ID)
