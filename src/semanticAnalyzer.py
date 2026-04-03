@@ -77,7 +77,9 @@ class SemanticAnalyzer:
             raise Exception(f"Error semantico: La variable '{node.name}' ya existe en este ambito (linea {node.line})")
 
         # 2. Si tiene valor inicial, verificar que el tipo coincida
-        if node.init:
+        #    Excepcion: InputExpr siempre es compatible con cualquier tipo porque
+        #    el codeGenerator emite el cast correcto (int(input()), float(input()), etc.)
+        if node.init and not isinstance(node.init, InputExpr):
             actual_type = node.init.analyze(self, scope_stack)
             if actual_type != node.var_type:
                 raise Exception(
