@@ -13,16 +13,8 @@
       --text-main: #cccccc;
       --text-dim: #8c8c8c;
       --line-num-bg: #252526;
-      --tab-active: #1e1e1e;
-      --tab-inactive: #2d2d2d;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: var(--bg-dark);
       color: var(--text-main);
@@ -32,7 +24,7 @@
       overflow: hidden;
     }
 
-    /* ---------- BARRA LATERAL ---------- */
+    /* ── SIDEBAR ── */
     .sidebar {
       width: 260px;
       background: var(--bg-sidebar);
@@ -42,11 +34,7 @@
       flex-direction: column;
       flex-shrink: 0;
     }
-
-    .sidebar.collapsed {
-      width: 50px;
-    }
-
+    .sidebar.collapsed { width: 50px; }
     .sidebar-header {
       padding: 12px;
       display: flex;
@@ -55,26 +43,10 @@
       border-bottom: 1px solid var(--border-color);
       height: 40px;
     }
+    .sidebar-title { font-size:11px; font-weight:bold; color:var(--text-dim); white-space:nowrap; }
+    .sidebar.collapsed .sidebar-title { display:none; }
+    .sidebar-content { padding:10px; flex:1; overflow-y:auto; overflow-x:hidden; }
 
-    .sidebar-title {
-      font-size: 11px;
-      font-weight: bold;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
-
-    .sidebar.collapsed .sidebar-title {
-      display: none;
-    }
-
-    .sidebar-content {
-      padding: 10px;
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    /* BOTONES */
     .nav-btn {
       background: transparent;
       border: none;
@@ -91,147 +63,52 @@
       transition: background 0.2s, color 0.2s;
       text-align: left;
     }
+    .nav-btn:hover { background:#37373d; color:white; }
+    .nav-btn.primary { background:var(--accent-color); color:white; margin-top:10px; }
+    .nav-btn.primary:hover { background:#1177bb; }
+    .sidebar.collapsed .nav-btn span { display:none; }
+    .sidebar.collapsed .nav-btn { justify-content:center; }
 
-    .nav-btn:hover {
-      background: #37373d;
-      color: white;
-    }
-
-    .nav-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    .nav-btn span {
-      white-space: nowrap;
-    }
-
-    .sidebar.collapsed .nav-btn span {
-      display: none;
-    }
-
-    .sidebar.collapsed .nav-btn {
-      justify-content: center;
-    }
-
-    .nav-btn.primary {
-      background: var(--accent-color);
-      color: white;
-      margin-top: 10px;
-    }
-
-    .nav-btn.primary:hover {
-      background: #1177bb;
-    }
-    
     .nav-icon {
-      width: 18px;
-      height: 18px;
-      background-color: currentColor; /* Usa el color del texto del botón */
+      width:18px; height:18px;
+      background-color: currentColor;
       display: inline-block;
-      
-      /* Asegúrate de que estas rutas sean correctas */
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-size: 100% 100%;
-      mask-size: 100% 100%;
-      -webkit-mask-position: center;
-      mask-position: center;
+      flex-shrink: 0;
+      -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+      -webkit-mask-size:100% 100%;  mask-size:100% 100%;
+      -webkit-mask-position:center; mask-position:center;
     }
-    
-    /* Clases específicas para cada icono */
-    .icon-arrow { 
-        -webkit-mask-image: url('/static/icons/arrow.svg'); 
-        mask-image: url('/static/icons/arrow.svg'); 
-    }
-    
-    .icon-file { 
-        -webkit-mask-image: url('/static/icons/file.svg'); 
-        mask-image: url('/static/icons/file.svg'); 
-    }
-    
-    .icon-floppy { 
-        -webkit-mask-image: url('/static/icons/floppy.svg'); 
-        mask-image: url('/static/icons/floppy.svg'); 
-    }
-    
-    .icon-folder { 
-        -webkit-mask-image: url('/static/icons/folder.svg'); 
-        mask-image: url('/static/icons/folder.svg');
-    }
-    
-    .icon-hamburguer { 
-        -webkit-mask-image: url('/static/icons/hamburguer.svg'); 
-        mask-image: url('/static/icons/hamburguer.svg'); 
-    }
+    .icon-arrow      { -webkit-mask-image:url('/static/icons/arrow.svg');      mask-image:url('/static/icons/arrow.svg'); }
+    .icon-file       { -webkit-mask-image:url('/static/icons/file.svg');       mask-image:url('/static/icons/file.svg'); }
+    .icon-floppy     { -webkit-mask-image:url('/static/icons/floppy.svg');     mask-image:url('/static/icons/floppy.svg'); }
+    .icon-folder     { -webkit-mask-image:url('/static/icons/folder.svg');     mask-image:url('/static/icons/folder.svg'); }
+    .icon-hamburguer { -webkit-mask-image:url('/static/icons/hamburguer.svg'); mask-image:url('/static/icons/hamburguer.svg'); }
 
-
-    /* ---------- ÁREA PRINCIPAL ---------- */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      background: var(--bg-dark);
-    }
-
-    /* EDITOR */
-    .editor-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
+    /* ── MAIN ── */
+    .main { flex:1; display:flex; flex-direction:column; min-width:0; background:var(--bg-dark); }
+    .editor-container { flex:1; display:flex; flex-direction:column; overflow:hidden; }
     .editor-header {
-      background: var(--bg-sidebar);
-      padding: 8px 15px;
-      font-size: 12px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      color: var(--text-dim);
+      background:var(--bg-sidebar);
+      padding:8px 15px; font-size:12px;
+      border-bottom:1px solid var(--border-color);
+      display:flex; justify-content:space-between; color:var(--text-dim);
     }
-
-    .code-area {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-
+    .code-area { display:flex; flex:1; overflow:hidden; }
     .line-numbers {
-      background: var(--line-num-bg);
-      color: #858585;
-      text-align: right;
-      padding: 10px 10px;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 14px;
-      border-right: 1px solid var(--border-color);
-      min-width: 45px;
-      user-select: none;
-      overflow-y: hidden;
-      line-height: 1.5;
+      background:var(--line-num-bg); color:#858585;
+      text-align:right; padding:10px;
+      font-family:'Consolas','Monaco',monospace; font-size:14px;
+      border-right:1px solid var(--border-color);
+      min-width:45px; user-select:none; overflow-y:hidden; line-height:1.5;
+    }
+    textarea#editor {
+      flex:1; background:transparent; color:#d4d4d4;
+      border:none; padding:10px;
+      font-family:'Consolas','Monaco',monospace; font-size:14px;
+      outline:none; resize:none; line-height:1.5; white-space:pre; overflow:auto;
     }
 
-    textarea {
-      flex: 1;
-      background: transparent;
-      color: #d4d4d4;
-      border: none;
-      padding: 10px;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 14px;
-      outline: none;
-      resize: none;
-      line-height: 1.5;
-      white-space: pre;
-      overflow: auto;
-    }
-
-    /* ---------- PANELES INFERIORES ---------- */
+    /* ── PANELES ── */
     .bottom-panels {
       height: 220px;
       background: var(--bg-dark);
@@ -239,82 +116,69 @@
       display: flex;
       flex-direction: column;
     }
-
     .panel-tabs {
-      display: flex;
-      background: var(--bg-sidebar);
-      padding-left: 10px;
-      border-bottom: 1px solid var(--border-color);
-      gap: 2px;
+      display:flex; background:var(--bg-sidebar);
+      padding-left:10px; border-bottom:1px solid var(--border-color); gap:2px;
     }
-
     .panel-tab {
-      padding: 6px 12px;
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      transition: color 0.2s;
+      padding:6px 12px; font-size:11px; text-transform:uppercase;
+      color:var(--text-dim); cursor:pointer; border:none; background:transparent; transition:color 0.2s;
     }
-
-    .panel-tab:hover {
-      color: white;
-    }
-
-    .panel-tab.active {
-      color: white;
-      border-bottom: 1px solid white;
-    }
+    .panel-tab:hover { color:white; }
+    .panel-tab.active { color:white; border-bottom:1px solid white; }
 
     .panel-content {
+      flex:1; padding:10px;
+      font-family:'Consolas',monospace; font-size:12px;
+      overflow-y:auto; display:none;
+    }
+    .panel-content.active { display:flex; flex-direction:column; }
+    #panel-tokens.active, #panel-debug.active, #panel-terminal.active { display:block; }
+
+    /* ── TERMINAL ── */
+    #terminal-output {
       flex: 1;
-      padding: 10px;
-      font-family: 'Consolas', monospace;
-      font-size: 12px;
       overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+    .term-line        { color: #d4d4d4; display:block; }
+    .term-line.error  { color: #f48771; }
+    .term-line.info   { color: #569cd6; }
+    .term-line.prompt { color: #dcdcaa; }
+
+    /* Fila de input inline en el terminal */
+    #terminal-input-row {
       display: none;
-      /*white-space: pre-wrap;
-      word-wrap: break-word;*/
-    }
-
-    .panel-content.active {
-      display: block;
-    }
-
-    .log-entry {
-      margin-bottom: 4px;
-    }
-
-    .log-success {
-      color: #6a9955;
-    }
-
-    .log-info {
-      color: #0e639c;
-    }
-
-    /* BARRA DE ESTADO */
-    .statusbar {
-      background: var(--accent-color);
-      color: white;
-      padding: 3px 12px;
-      font-size: 11px;
-      display: flex;
-      justify-content: space-between;
-      height: 22px;
+      align-items: center;
+      gap: 6px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 6px;
+      margin-top: 6px;
       flex-shrink: 0;
     }
-
-    .dirty-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #f48771;
-      margin-right: 5px;
+    #terminal-input-row.visible { display: flex; }
+    #terminal-input-row .prompt-arrow { color:#dcdcaa; font-family:'Consolas',monospace; font-size:12px; }
+    #terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--accent-color);
+      color: #d4d4d4;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      outline: none;
+      padding: 2px 4px;
     }
+
+    /* ── STATUS BAR ── */
+    .statusbar {
+      background:var(--accent-color); color:white;
+      padding:3px 12px; font-size:11px;
+      display:flex; justify-content:space-between; height:22px; flex-shrink:0;
+    }
+    .dirty-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#f48771; margin-right:5px; }
   </style>
 </head>
 <body>
@@ -322,44 +186,24 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title">EXPLORADOR</span>
-      <button id="toggleSidebar" style="background:none; border:none; color:inherit; cursor:pointer;">
-        <!--<svg viewBox="0 0 24 24" width="18" fill="currentColor">
-          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-        </svg>-->
+      <button id="toggleSidebar" style="background:none;border:none;color:inherit;cursor:pointer;">
         <span class="nav-icon icon-hamburguer"></span>
       </button>
     </div>
-
     <div class="sidebar-content">
       <button class="nav-btn" id="btnNew">
-        <!--<svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M13,9V3.5L18.5,9H13Z" /></svg>-->
-        <span class="nav-icon icon-file"></span>
-        <span>Nuevo Archivo</span>
+        <span class="nav-icon icon-file"></span><span>Nuevo Archivo</span>
       </button>
-
       <button class="nav-btn" id="btnOpen">
-        <!--<svg viewBox="0 0 24 24"><path d="M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z" /></svg>-->
-        <span class="nav-icon icon-folder"></span>
-        <span>Abrir</span>
+        <span class="nav-icon icon-folder"></span><span>Abrir</span>
       </button>
-
       <button class="nav-btn" id="btnSave">
-        <!--<svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>-->
-        <span class="nav-icon icon-floppy"></span>
-        <span>Guardar</span>
+        <span class="nav-icon icon-floppy"></span><span>Guardar</span>
       </button>
-
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
-
-      <form id="compileForm" action="/compile" method="POST">
-        <input type="hidden" name="filename" id="compileFilename">
-        <input type="hidden" name="content" id="compileContent">
-        <button type="submit" class="nav-btn primary">
-          <!--<svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z" /></svg>-->
-          <span class="nav-icon icon-arrow"></span>
-          <span>Compilar Koda</span>
-        </button>
-      </form>
+      <hr style="border:0;border-top:1px solid var(--border-color);margin:10px 0;">
+      <button class="nav-btn primary" id="btnCompile">
+        <span class="nav-icon icon-arrow"></span><span>Compilar Koda</span>
+      </button>
     </div>
   </div>
 
@@ -371,7 +215,7 @@
       </div>
       <div class="code-area">
         <div class="line-numbers" id="lineNumbers">1</div>
-        <textarea id="editor" spellcheck="false" placeholder="// Escribe tu código aquí...">{{ content or '' }}</textarea>
+        <textarea id="editor" spellcheck="false" placeholder="// Escribe tu código aquí..."></textarea>
       </div>
     </div>
 
@@ -382,120 +226,195 @@
         <button class="panel-tab" data-target="panel-debug">AST</button>
         <button class="panel-tab" data-target="panel-terminal">Semantic</button>
       </div>
-      
+
+      <!-- OUTPUT: terminal interactiva -->
       <div id="panel-output" class="panel-content active">
-        {% if output %}
-          <pre>{{ output }}</pre>
-        {% else %}
-          <div class="log-entry" style="color:#fff">No output from server</div>
-        {% endif %}
-      </div>
-      
-      <div id="panel-tokens" class="panel-content">
-        {% if tokens %}
-          <pre>{{ tokens }}</pre>
-          {% else %}
-            <div class="log-entry" style="color:#fff">No output from server</div>
-        {% endif %}
+        <div id="terminal-output">
+          <span class="term-line info">Koda Studio listo. Escribe código y presiona Compilar.</span>
+        </div>
+        <div id="terminal-input-row">
+          <span class="prompt-arrow">entrada &gt;</span>
+          <input id="terminal-input" type="text" autocomplete="off" spellcheck="false">
+        </div>
       </div>
 
-      <div id="panel-debug" class="panel-content">
-        {% if ast %}
-          <pre>{{ ast }}</pre>
-          {% else %}
-            <div class="log-entry" style="color:#fff">No output from server</div>
-        {% endif %}
-      </div>
-
-      <div id="panel-terminal" class="panel-content">
-        <!--<div class="log-entry" style="color:#fff">Koda Web Terminal [V1.0.0]</div>-->
-        {% if semantic %}
-          <pre>{{ semantic }}</pre>
-          {% else %}
-            <div class="log-entry" style="color:#fff">No output from server</div>
-        {% endif %}
-      </div>
-
+      <div id="panel-tokens"   class="panel-content"><pre id="tokens-content"   style="color:#d4d4d4"></pre></div>
+      <div id="panel-debug"    class="panel-content"><pre id="ast-content"       style="color:#d4d4d4"></pre></div>
+      <div id="panel-terminal" class="panel-content"><pre id="semantic-content"  style="color:#d4d4d4"></pre></div>
     </div>
 
     <div class="statusbar">
-      <span>
-        <span id="dirtyDot"></span>
-        <span id="statusFile">Sin archivo</span>
-      </span>
-      <span>
-        <span id="cursorPos">Línea 1, Col 1</span> | UTF-8
-      </span>
+      <span><span id="dirtyDot"></span><span id="statusFile">Sin archivo</span></span>
+      <span><span id="cursorPos">Línea 1, Col 1</span> | UTF-8</span>
     </div>
   </div>
 
   <script>
-    /** @type {HTMLTextAreaElement} */
-    const editor = document.getElementById('editor');
+    const editor      = document.getElementById('editor');
     const lineNumbers = document.getElementById('lineNumbers');
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const cursorPos = document.getElementById('cursorPos');
+    const termOutput  = document.getElementById('terminal-output');
+    const inputRow    = document.getElementById('terminal-input-row');
+    const termInput   = document.getElementById('terminal-input');
 
-    let currentHandle = null;
+    let currentHandle   = null;
     let currentFilename = '';
-    let isDirty = false;
+    let isDirty         = false;
+    let resolveInput    = null;   // resolve de la Promise esperando input del usuario
 
+    // ── UI ───────────────────────────────────────────────────────
     function updateUI() {
       const name = currentFilename || 'Sin título.kd';
-      fileNameDisplay.textContent = (isDirty ? '● ' : '') + name;
+      document.getElementById('fileNameDisplay').textContent = (isDirty ? '● ' : '') + name;
       document.getElementById('statusFile').textContent = name;
       document.getElementById('dirtyDot').innerHTML = isDirty ? '<span class="dirty-dot"></span>' : '';
-
-      const lines = editor.value.split('\n').length;
-      document.getElementById('editorStats').textContent = `${lines} líneas`;
+      document.getElementById('editorStats').textContent = `${editor.value.split('\n').length} líneas`;
       document.title = (isDirty ? '● ' : '') + name + ' - Koda Studio';
     }
 
     function updateLineNumbers() {
-      const lines = editor.value.split('\n').length;
-      let numbers = '';
-      for (let i = 1; i <= lines; i++) {
-        numbers += i + '<br>';
-      }
-      lineNumbers.innerHTML = numbers;
+      const n = editor.value.split('\n').length;
+      lineNumbers.innerHTML = Array.from({length: n}, (_, i) => i + 1).join('<br>');
     }
 
     function updateCursor() {
-      const pos = editor.selectionStart;
-      const textBefore = editor.value.substring(0, pos);
-      const lines = textBefore.split('\n');
-      cursorPos.textContent = `Línea ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+      const before = editor.value.substring(0, editor.selectionStart).split('\n');
+      document.getElementById('cursorPos').textContent =
+        `Línea ${before.length}, Col ${before[before.length-1].length + 1}`;
     }
 
-    function switchTab(targetId, activeBtn) {
+    function switchTab(targetId, btn) {
       document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
-
       document.getElementById(targetId).classList.add('active');
-      activeBtn.classList.add('active');
+      btn.classList.add('active');
     }
 
-    async function saveToHandle(handle, content) {
-      try {
-        const writable = await handle.createWritable();
-        await writable.write(content);
-        await writable.close();
-        return true;
-      } catch (e) {
-        console.error("Error al escribir archivo:", e);
-        return false;
+    // ── Terminal ─────────────────────────────────────────────────
+    function termWrite(text, cls = 'term-line') {
+      text.split('\n').forEach((line, i, arr) => {
+        if (i === arr.length - 1 && line === '') return;
+        const el = document.createElement('span');
+        el.className = cls;
+        el.textContent = line;
+        termOutput.appendChild(el);
+      });
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    function termClear() { termOutput.innerHTML = ''; }
+
+    function showInputPrompt() {
+      switchTab('panel-output', document.querySelector('[data-target="panel-output"]'));
+      inputRow.classList.add('visible');
+      termInput.value = '';
+      termInput.focus();
+    }
+
+    function hideInputPrompt() { inputRow.classList.remove('visible'); }
+
+    // Enter confirma el valor escrito
+    termInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && resolveInput) {
+        const val = termInput.value;
+        resolveInput(val);
+        resolveInput = null;
       }
+    });
+
+    function waitForInput() {
+      return new Promise(resolve => { resolveInput = resolve; });
+    }
+
+    // ── Detectar y recoger inputs ────────────────────────────────
+    function countInputs(code) {
+      return (code.match(/\binput\s*\(/g) || []).length;
+    }
+
+    async function collectInputs(needed) {
+      const values = [];
+      for (let i = 0; i < needed; i++) {
+        termWrite(`Entrada ${i + 1} de ${needed}:`, 'term-line prompt');
+        showInputPrompt();
+        const val = await waitForInput();
+        hideInputPrompt();
+        termWrite(`> ${val}`, 'term-line prompt');
+        values.push(val);
+      }
+      return values;
+    }
+
+    // ── Compilar y ejecutar ──────────────────────────────────────
+    async function compile() {
+      const src = editor.value.trim();
+      if (!src) { termWrite('No hay código para compilar.', 'term-line error'); return; }
+
+      termClear();
+      termWrite('Compilando...', 'term-line info');
+      switchTab('panel-output', document.querySelector('[data-target="panel-output"]'));
+
+      // Fase de compilación
+      let compileResult;
+      try {
+        const res = await fetch('/compile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: src })
+        });
+        compileResult = await res.json();
+      } catch (e) {
+        termWrite(`[ERROR DE RED] ${e}`, 'term-line error');
+        return;
+      }
+
+      if (compileResult.error) {
+        termWrite(compileResult.error, 'term-line error');
+        return;
+      }
+
+      // Llenar los paneles auxiliares
+      document.getElementById('tokens-content').textContent   = compileResult.tokens   || '';
+      document.getElementById('ast-content').textContent      = compileResult.ast       || '';
+      document.getElementById('semantic-content').textContent = compileResult.semantic  || '';
+
+      const generatedCode = compileResult.generated_code;
+
+      // Recoger inputs si el programa los necesita
+      const needed = countInputs(generatedCode);
+      let stdinValues = [];
+      if (needed > 0) {
+        termWrite(`El programa necesita ${needed} valor(es) de entrada:`, 'term-line info');
+        stdinValues = await collectInputs(needed);
+      }
+
+      // Fase de ejecución
+      termWrite('Ejecutando...', 'term-line info');
+      let runResult;
+      try {
+        const res = await fetch('/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ generated_code: generatedCode, stdin: stdinValues })
+        });
+        runResult = await res.json();
+      } catch (e) {
+        termWrite(`[ERROR DE RED] ${e}`, 'term-line error');
+        return;
+      }
+
+      termClear();
+      const output = runResult.output || '';
+      termWrite(output, output.startsWith('[ERROR') ? 'term-line error' : 'term-line');
+    }
+
+    // ── File system ──────────────────────────────────────────────
+    async function saveToHandle(handle, content) {
+      try { const w = await handle.createWritable(); await w.write(content); await w.close(); return true; }
+      catch { return false; }
     }
 
     async function saveCurrent() {
-      if (currentHandle) {
-        if (await saveToHandle(currentHandle, editor.value)) {
-          isDirty = false;
-          updateUI();
-        }
-      } else {
-        await saveAs();
-      }
+      if (currentHandle) { if (await saveToHandle(currentHandle, editor.value)) { isDirty = false; updateUI(); } }
+      else { await saveAs(); }
     }
 
     async function saveAs() {
@@ -503,102 +422,59 @@
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: currentFilename || 'main.kd',
-            types: [{
-              description: 'Koda Files',
-              accept: { 'text/plain': ['.kd'] }
-            }]
+            types: [{ description: 'Koda Files', accept: { 'text/plain': ['.kd'] } }]
           });
           if (await saveToHandle(handle, editor.value)) {
-            currentHandle = handle;
-            currentFilename = handle.name;
-            isDirty = false;
-            updateUI();
+            currentHandle = handle; currentFilename = handle.name; isDirty = false; updateUI();
           }
-        } catch (e) {
-          if (e.name !== 'AbortError') console.error(e);
-        }
+        } catch (e) { if (e.name !== 'AbortError') console.error(e); }
       } else {
-        alert("Tu navegador no soporta el acceso directo al sistema de archivos. Se descargará el archivo.");
-        const blob = new Blob([editor.value], { type: 'text/plain' });
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = currentFilename || 'archivo.kd';
-        a.click();
+        a.href = URL.createObjectURL(new Blob([editor.value], { type: 'text/plain' }));
+        a.download = currentFilename || 'archivo.kd'; a.click();
       }
     }
 
-    // --- LISTENERS ---
-    editor.addEventListener('input', () => {
-      isDirty = true;
-      updateLineNumbers();
-      updateUI();
-    });
+    // ── Listeners ────────────────────────────────────────────────
+    editor.addEventListener('input',  () => { isDirty = true; updateLineNumbers(); updateUI(); });
+    editor.addEventListener('scroll', () => { lineNumbers.scrollTop = editor.scrollTop; });
+    editor.addEventListener('click',  updateCursor);
+    editor.addEventListener('keyup',  updateCursor);
 
-    editor.addEventListener('scroll', () => {
-      lineNumbers.scrollTop = editor.scrollTop;
-    });
-
-    editor.addEventListener('click', updateCursor);
-    editor.addEventListener('keyup', updateCursor);
-
-    document.getElementById('toggleSidebar').onclick = () => {
+    document.getElementById('toggleSidebar').onclick = () =>
       document.getElementById('sidebar').classList.toggle('collapsed');
-    };
 
-    document.querySelectorAll('.panel-tab').forEach(btn => {
-      btn.onclick = () => switchTab(btn.dataset.target, btn);
-    });
+    document.querySelectorAll('.panel-tab').forEach(btn =>
+      btn.onclick = () => switchTab(btn.dataset.target, btn));
+
+    document.getElementById('btnCompile').onclick = compile;
 
     document.getElementById('btnNew').onclick = () => {
       if (isDirty && !confirm('¿Descartar cambios sin guardar?')) return;
-      editor.value = '';
-      currentHandle = null;
-      currentFilename = '';
-      isDirty = false;
-      updateUI();
-      updateLineNumbers();
-      updateCursor();
+      editor.value = ''; currentHandle = null; currentFilename = ''; isDirty = false;
+      updateUI(); updateLineNumbers(); updateCursor();
     };
 
     document.getElementById('btnOpen').onclick = async () => {
       if (isDirty && !confirm('Hay cambios sin guardar. ¿Continuar?')) return;
       try {
         const [handle] = await window.showOpenFilePicker({
-          types: [{
-            description: 'Koda',
-            accept: { 'text/plain': ['.kd'] }
-          }]
+          types: [{ description: 'Koda', accept: { 'text/plain': ['.kd'] } }]
         });
         const file = await handle.getFile();
         editor.value = await file.text();
-        currentHandle = handle;
-        currentFilename = file.name;
-        isDirty = false;
-        updateUI();
-        updateLineNumbers();
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error(e);
-      }
+        currentHandle = handle; currentFilename = file.name;
+        isDirty = false; updateUI(); updateLineNumbers();
+      } catch (e) { if (e.name !== 'AbortError') console.error(e); }
     };
 
     document.getElementById('btnSave').onclick = saveCurrent;
 
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        saveCurrent();
-      }
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrent(); }
     });
 
-    document.getElementById('compileForm').onsubmit = function() {
-      document.getElementById('compileFilename').value = currentFilename;
-      document.getElementById('compileContent').value = editor.value;
-    };
-
-    // Inicialización
-    updateLineNumbers();
-    updateUI();
-    updateCursor();
+    updateLineNumbers(); updateUI(); updateCursor();
   </script>
 </body>
 </html>

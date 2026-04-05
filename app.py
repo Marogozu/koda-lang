@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from src import Lexer, Parser, SemanticAnalyzer, CodeGenerator
 import io
 import sys
@@ -10,68 +10,69 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
+
 @app.route("/compile", methods=["POST"])
 def compile_code():
-
+    """Compila el codigo Koda y devuelve JSON con el codigo generado y los datos de cada fase."""
     try:
-        # código enviado desde el editor
-        src = request.form.get("content", "")
+        src = request.json.get("content", "")
 
         if not src.strip():
-            return render_template(
-                "index.html",
-                error="No se envió código para compilar."
-            )
+            return jsonify({"error": "No se envió código para compilar."})
 
-        # ----- Fase 1: Lexer -----
+        # Fase 1: Lexer
         tokens = Lexer(src)
 
-        # ----- Fase 2: Parser -----
+        # Fase 2: Parser
         parser = Parser(tokens)
         ast = parser.parse()
+
+        # Fase 3: Análisis semántico
         analyzer = SemanticAnalyzer()
         semantic = analyzer.analyze(ast)
 
-        # ----- Fase 4: Code Generation -----
+        # Fase 4: Generación de código
         generator = CodeGenerator()
         generated_code = generator.generate(ast)
 
-        # ----- Fase 5: Execution -----
-        # Capturar el stdout del codigo generado
-        stdout_capture = io.StringIO()
-        try:
-            # El namespace compartido permite que funciones y variables
-            # declaradas antes sean visibles en todo el programa.
-            # __builtins__ es necesario para que print, input, int, etc. funcionen.
-            namespace = {"__builtins__": __builtins__}
-            with contextlib.redirect_stdout(stdout_capture):
-                exec(generated_code, namespace)
-            output = stdout_capture.getvalue()
-            if not output:
-                output = "(El programa no produjo salida)"
-        except Exception as exec_error:
-            output = f"[ERROR DE EJECUCION] {exec_error}"
-
-        # salida que se mostrará en los paneles
-        ast_str = str(ast)
-
-        return render_template(
-            "index.html",
-            output=output,
-            tokens=tokens,
-            ast=ast_str,
-            semantic=semantic,
-            content=src
-        )
+        return jsonify({
+            "generated_code": generated_code,
+            "tokens":         str(tokens),
+            "ast":            str(ast),
+            "semantic":       semantic,
+        })
 
     except Exception as e:
+        return jsonify({"error": str(e)})
 
-        return render_template(
-            "index.html",
-            output=str(e),
-            # error=str(e),
-            content=src
-        )
+
+@app.route("/run", methods=["POST"])
+def run_code():
+    """Ejecuta el codigo Python generado con los valores de stdin provistos y devuelve el output."""
+    try:
+        data           = request.json
+        generated_code = data.get("generated_code", "")
+        stdin_values   = data.get("stdin", [])   # lista de strings, uno por input()
+
+        stdin_iter = iter(stdin_values)
+
+        def fake_input(prompt=""):
+            try:
+                return next(stdin_iter)
+            except StopIteration:
+                return ""
+
+        stdout_capture = io.StringIO()
+        namespace = {"__builtins__": __builtins__, "input": fake_input}
+
+        with contextlib.redirect_stdout(stdout_capture):
+            exec(generated_code, namespace)
+
+        output = stdout_capture.getvalue()
+        return jsonify({"output": output if output else "(El programa no produjo salida)"})
+
+    except Exception as e:
+        return jsonify({"output": f"[ERROR DE EJECUCION] {e}"})
 
 
 if __name__ == "__main__":
